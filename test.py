@@ -6,27 +6,13 @@ Created on Wed Jan 29 10:47:01 2025
 @author: Dr Binghao Chai
 @institute: University College London (UCL)
 
-This script is to run the MIL classifier (with two different strategies for tile-
-selection within slides) on embeddings on the hold-out testing slides. (Pipeline 2)
+This script is to run the MIL classifier on embeddings for testing datasets. It 
+takes WSIs that have been converted into patch-level 384-dimensional feature embeddings 
+as the input, together with a metadata spreadsheet containin case_id and ground_truth.
 
 Parameters
 ----------
-embedding_path: str
-    The root folder containing embeddings. This folder contains multiple subfolders
-    where each subfolder represents a class (ground truth). Each CSV file in these
-    subfolders represents a slide and contains tile embeddings.
-
-ground_truth: int
-    The ground truth label for this batch of embeddings.
-
-model: str
-    The path for storing trained model, should load the state dictionary only.
-
-output_folder: str
-    The output folder path for slide-level results.
-
-k_tiles: int
-    K tiles selected from each of the slides for the multi-instance classifier.
+# TODO
 
 """
 
@@ -44,6 +30,8 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 from sklearn.metrics import confusion_matrix
 
+from utils.helper_class_pytorch import SlideBagDataset, AttentionMIL
+
 since = time.time()
 
 # Arguments definition
@@ -57,12 +45,6 @@ if __name__ == "__main__":
         help="The root folder containing embeddings. This folder contains subfolders "
              "for each class, and CSV files inside represent slide embeddings."
     )    
-    parser.add_argument(
-        "--ground_truth",
-        type=int, 
-        default="15", 
-        help="The ground truth label for all slides in the folder."
-    )
     parser.add_argument(
         "--model",
         type=str, 
@@ -90,24 +72,6 @@ os.makedirs(opt.output_folder, exist_ok=True)
 
 #################### Define helper classes and functions ####################
 
-# Define the dataset class (Restored original version)
-class SlideBagDataset(Dataset):
-    def __init__(self, slide_patch_features, slide_labels):
-        """
-        slide_patch_features: list of torch.Tensor, where each element is a tensor
-                              of shape [n_patches_in_bag, 384] for a slide.
-        slide_labels: list of int, where each element is the slide-level label.
-        """
-        self.slide_patch_features = slide_patch_features
-        self.slide_labels = slide_labels
-
-    def __len__(self):
-        return len(self.slide_patch_features)  # Number of slides (bags)
-
-    def __getitem__(self, idx):
-        patch_features = self.slide_patch_features[idx]  # Shape: [n_patches_in_bag, 384]
-        label = self.slide_labels[idx]  # Scalar label (e.g., subtype ID)
-        return patch_features, label
 
 # Random tile selection
 def random_tile_selection(patch_features, K=opt.k_tiles):
@@ -119,23 +83,6 @@ def random_tile_selection(patch_features, K=opt.k_tiles):
 
 #################### Define the model and load the trained model ####################
 
-class AttentionMIL(nn.Module):
-    def __init__(self, input_dim, attention_dim, num_classes):
-        super(AttentionMIL, self).__init__()
-        self.attention = nn.Linear(input_dim, attention_dim)
-        self.attention_score = nn.Linear(attention_dim, 1)
-        self.classifier = nn.Linear(input_dim, num_classes)
-
-    def forward(self, x):
-        attention_weights = torch.tanh(self.attention(x))
-        attention_weights = F.softmax(self.attention_score(attention_weights), dim=0)
-        
-        # Weighted sum of patch features
-        slide_representation = torch.sum(attention_weights * x, dim=0)
-        
-        # Slide-level classification
-        output = self.classifier(slide_representation)
-        return output, attention_weights
 
 # Load trained model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
