@@ -9,3 +9,5 @@ __pycache__/
 .spyproject/
 *.sh
 labels/
+models/
+train_log
