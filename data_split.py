@@ -3,7 +3,7 @@
 """
 Created on Mon Feb  3 15:18:39 2025
 
-@author: digitalpathology@author: Dr Binghao Chai
+@author: Dr Binghao Chai
 @institute: University College London (UCL)
 
 This script performs a train-validation-test split on a CSV file containing 
