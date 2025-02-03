@@ -37,6 +37,9 @@ target_path: str
 csv_path: str
     The path for the csv file containing the file names, the first row of the 
     csv file should be the header.
+    
+exclude: str
+    Indicate if any subfolder should not be traversed, if all the subfolders are to be traversed, then enter 'None'.
 
 """
 
@@ -159,7 +162,6 @@ def copy_file(root, name, local_folder, copied_files):
 
 
 copy_files(opt.target_path, opt.source_path, opt.csv_path, exclude_folders=exclude_folders)
-
 
 # debug print    
 time_elapsed = time.time() - since
