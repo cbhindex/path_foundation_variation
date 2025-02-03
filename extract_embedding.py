@@ -54,6 +54,7 @@ import tensorflow as tf
 from tensorflow.keras.layers import TFSMLayer
 
 from utils.helper_class import WholeSlideBagTF
+from utils.helper_functions import resize_transforms
 
 # define argument parser
 parser = argparse.ArgumentParser(description='extract embeddings')
@@ -69,16 +70,6 @@ parser.add_argument('--model_path', type=str,
 parser.add_argument('--output_path', type=str,
                     default='/home/digitalpathology/workspace/path_foundation_stain_variation_refactoring/embeddings/01_external',
                     help='path to folder for outputs')
-
-#################### define functions ####################
-
-# Define a custom transformation pipeline with TensorFlow (optional)
-def resize_transforms(img):
-    # Resize to 224x224
-    img = tf.image.resize(img, [224, 224], method=tf.image.ResizeMethod.BILINEAR)
-    # Normalize pixel values to [0, 1]
-    img = tf.cast(img, tf.float32) / 255.0
-    return img
 
 #################### define slide processing function ####################
 
