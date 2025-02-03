@@ -56,21 +56,6 @@ from tensorflow.keras.layers import TFSMLayer
 from utils.helper_class import WholeSlideBagTF
 from utils.helper_functions import resize_transforms
 
-# define argument parser
-parser = argparse.ArgumentParser(description='extract embeddings')
-parser.add_argument('--wsi_path', type=str,
-                    default='/home/digitalpathology/workspace/path_foundation_stain_variation_refactoring/source_wsi/01_external',
-					help='path to folder for oroginal slides')
-parser.add_argument('--tile_path', type=str, 
-                    default='/home/digitalpathology/workspace/path_foundation_stain_variation_refactoring/tiles/01_external/patches',
-					help='path to folder for tiling information in .h5')
-parser.add_argument('--model_path', type=str, 
-                    default='/home/digitalpathology/.cache/huggingface/hub/models--google--path-foundation/snapshots/fd6a835ceaae15be80db6abd8dcfeb86a9287e72',
-					help='path to Path Foundation model')
-parser.add_argument('--output_path', type=str,
-                    default='/home/digitalpathology/workspace/path_foundation_stain_variation_refactoring/embeddings/01_external',
-                    help='path to folder for outputs')
-
 #################### define slide processing function ####################
 
 def process_slide(tile_path, wsi_path, model, batch_size=32):
@@ -116,6 +101,20 @@ def process_slide(tile_path, wsi_path, model, batch_size=32):
 
 #################### main part for inference ####################
 if __name__ == "__main__":
+    # define argument parser
+    parser = argparse.ArgumentParser(description='extract embeddings')
+    parser.add_argument('--wsi_path', type=str,
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation_refactoring/source_wsi/01_external',
+    					help='path to folder for oroginal slides')
+    parser.add_argument('--tile_path', type=str, 
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation_refactoring/tiles/01_external/patches',
+    					help='path to folder for tiling information in .h5')
+    parser.add_argument('--model_path', type=str, 
+                        default='/home/digitalpathology/.cache/huggingface/hub/models--google--path-foundation/snapshots/fd6a835ceaae15be80db6abd8dcfeb86a9287e72',
+    					help='path to Path Foundation model')
+    parser.add_argument('--output_path', type=str,
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation_refactoring/embeddings/01_external',
+                        help='path to folder for outputs')
     args = parser.parse_args()
 
     # Print GPU availability
