@@ -38,7 +38,7 @@ val_labels: str
     Path to validation label CSV.
     
 model_folder: str
-    Path to saved model, this is also the output folder.
+    Path to saved model folder, this is also the output folder.
 
 k_instances: int
     Number of instances per bag.
@@ -216,7 +216,7 @@ if __name__ == '__main__':
                         help='Path to validation label CSV')
     parser.add_argument('--model_folder', type=str, 
                         default="/home/digitalpathology/workspace/path_foundation_stain_variation/models", 
-                        help='Path to saved model')
+                        help='Path to saved model folder')
     parser.add_argument('--k_instances', type=int, default=500, help='Number of instances per bag')
     parser.add_argument('--epochs', type=int, default=200, help='Number of training epochs')
     parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
