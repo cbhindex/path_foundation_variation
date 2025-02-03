@@ -1,0 +1,10 @@
+.DS_Store
+embeddings/
+metadata/
+output/
+source_wsi/
+tiles/
+utils/__pycache__/
+__pycache__/
+.spyproject/
+*.sh
