@@ -12,6 +12,9 @@ testing of classifier.
 """
 
 # package loading
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import Dataset
 
 # Define the slide-level bag data structure for the slide-level MIL
@@ -34,3 +37,24 @@ class SlideBagDataset(Dataset):
         patch_features = self.slide_patch_features[idx]  # Shape: [n_patches_in_bag, 384]
         label = self.slide_labels[idx]  # Scalar label (e.g., subtype ID)
         return patch_features, label
+    
+# Define the attention mechanism and model
+class AttentionMIL(nn.Module):
+    def __init__(self, input_dim, attention_dim, num_classes):
+        super(AttentionMIL, self).__init__()
+        self.attention = nn.Linear(input_dim, attention_dim)  # Attention mechanism
+        self.attention_score = nn.Linear(attention_dim, 1)  # Attention score layer
+        self.classifier = nn.Linear(input_dim, num_classes)  # Slide-level classifier
+
+    def forward(self, x):
+        # x is of shape [n_patches_in_bag, input_dim]
+        attention_weights = torch.tanh(self.attention(x))  # Shape: [n_patches_in_bag, attention_dim]
+        attention_weights = F.softmax(self.attention_score(attention_weights), dim=0)  # Shape: [n_patches_in_bag, 1]
+
+        # Weighted sum of patch features
+        slide_representation = torch.sum(attention_weights * x, dim=0)  # Shape: [input_dim]
+        
+        # Slide-level classification
+        output = self.classifier(slide_representation)  # Shape: [num_classes]
+        
+        return output, attention_weights

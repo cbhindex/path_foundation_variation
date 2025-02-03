@@ -15,6 +15,7 @@ testing of classifier.
 import random
 
 import torch
+import numpy as np
 from torch.utils.data import DataLoader
 
 from utils.helper_class_pytorch import SlideBagDataset
@@ -23,7 +24,10 @@ from utils.helper_class_pytorch import SlideBagDataset
 # This is to handle the variable number of patches across slides (bags).
 def collate_fn_variable_size(batch):
     # Extract patch features and labels from the batch
-    batch_patches = [item[0] for item in batch]  # List of patch features (varying sizes)
+    batch_patches = [
+        torch.tensor(item[0], dtype=torch.float32) if isinstance(item[0], np.ndarray) 
+        else item[0] for item in batch
+        ]  # List of patch features (varying sizes)
     labels = torch.tensor([item[1] for item in batch])  # List of slide-level labels (same size)
     
     return batch_patches, labels
@@ -94,7 +98,12 @@ def collate_fn_random_sampling(batch, k_tiles=100):
             selected_indices = random.sample(range(n_patches_in_bag), k_tiles)
             selected_patches = patch_features[selected_indices]
         
+        # Convert to tensor if it's still a NumPy array
+        if isinstance(selected_patches, np.ndarray):
+            selected_patches = torch.tensor(selected_patches, dtype=torch.float32)
+        
         # Append the selected patches to the batch
         batch_patches.append(selected_patches)
     
     return batch_patches, labels
+
