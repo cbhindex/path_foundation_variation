@@ -53,8 +53,8 @@ from openslide import OpenSlide
 import tensorflow as tf
 from tensorflow.keras.layers import TFSMLayer
 
-from utils.helper_class import WholeSlideBagTF
-from utils.helper_functions import resize_transforms
+from utils.helper_class_tf import WholeSlideBagTF
+from utils.helper_functions_tf import resize_transforms
 
 #################### define slide processing function ####################
 

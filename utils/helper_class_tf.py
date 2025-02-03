@@ -6,7 +6,7 @@ Created on Mon Feb  3 00:05:26 2025
 @author: Dr Binghao Chai
 @institute: University College London (UCL)
 
-Helper classes.
+Helper classes for tensorflow env for embedding generation.
 
 """
 
