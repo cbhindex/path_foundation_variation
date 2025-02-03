@@ -29,7 +29,7 @@ train_folder: str
     Path to training data folder.
 
 train_labels: str
-    PPath to training label CSV.
+    Path to training label CSV.
 
 val_folder: str
     Path to validation data folder.
@@ -66,32 +66,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from utils.helper_class_pytorch import SlideBagDataset, AttentionMIL
-from utils.helper_functions_pytorch import collate_fn_random_sampling
-
-#################### define data loading function ####################
-
-def load_data(folder_path, label_csv):
-    # read the metadata containing case_id and their ground_truth
-    label_df = pd.read_csv(label_csv)
-    case_ids = label_df['case_id'].tolist()
-    labels_dict = label_df.set_index('case_id')['ground_truth'].to_dict()
-    
-    patch_features, labels = [], []
-    
-    for case_id in case_ids:
-        csv_path = os.path.join(folder_path, f"{case_id}.csv")
-        # check if embedding csv file exist
-        if os.path.exists(csv_path):
-            df = pd.read_csv(csv_path)
-            
-            # Ignore x_coord, y_coord and keep the rest as feature vectors
-            features = df.iloc[:, 2:].values  
-            patch_features.append(features)
-            labels.append(labels_dict[case_id])
-        else:
-            print(f"Warning: {case_id}.csv not found. Skipping this case.")
-    
-    return patch_features, labels
+from utils.helper_functions_pytorch import collate_fn_random_sampling, load_data
 
 #################### define the training loop ####################
 

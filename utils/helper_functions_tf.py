@@ -15,6 +15,10 @@ import tensorflow as tf
 
 # Define a custom transformation pipeline with TensorFlow
 def resize_transforms(img):
+    """
+    this function resize an input to [224, 224]
+
+    """
     # Resize to 224x224
     img = tf.image.resize(img, [224, 224], method=tf.image.ResizeMethod.BILINEAR)
     # Normalize pixel values to [0, 1]

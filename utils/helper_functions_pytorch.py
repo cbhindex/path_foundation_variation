@@ -12,17 +12,25 @@ testing of classifier.
 """
 
 # package import
+import os
+
 import random
+import numpy as np
+import pandas as pd
 
 import torch
-import numpy as np
 from torch.utils.data import DataLoader
 
 from utils.helper_class_pytorch import SlideBagDataset
 
-# Define a custom collate function for variable-size patch features,
-# This is to handle the variable number of patches across slides (bags).
+#################### define collate functions ####################
+
 def collate_fn_variable_size(batch):
+    """
+    This collate function is to handle the variable number of patches across s
+    lides (bags).
+    
+    """
     # Extract patch features and labels from the batch
     batch_patches = [
         torch.tensor(item[0], dtype=torch.float32) if isinstance(item[0], np.ndarray) 
@@ -107,3 +115,54 @@ def collate_fn_random_sampling(batch, k_tiles=100):
     
     return batch_patches, labels
 
+#################### define data loading function ####################
+
+def load_data(folder_path, label_csv):
+    """
+    This function is mainly used to load data. There are two inputs for this function,
+    they are: (1) a folder path containing many csv files, and (2) a path to a
+    single csv file serves as the metadata and contains ground truth of each case.
+    
+    Parameters
+    ----------
+    folder_path: str
+        Path to a folder containing many csv files, the name of these csv files
+        are there case IDs. The csv files are generally the embeddings for each 
+        of the slides, where the header is x_coord, y_coord, and emb_1, emb_2 ...
+        emb_384. The first columns reflects the location of each tile, and the rest
+        384 columns shows the feature vector.
+
+    label_csv: str
+        Path to the metadate (a single cvsv file). There are two columns for the
+        csv file, and the header to be "case_id" and "ground_truth". case_id matches
+        the files within {folder_path} folder, and "ground_truth" is an int value
+        showing the class/diagnosis.
+
+    Returns
+    -------
+    patch_features: list of ndarrays
+    
+    labels: list of ints
+
+    """
+    # read the metadata containing case_id and their ground_truth
+    label_df = pd.read_csv(label_csv)
+    case_ids = label_df['case_id'].tolist()
+    labels_dict = label_df.set_index('case_id')['ground_truth'].to_dict()
+    
+    patch_features, labels = [], []
+    
+    for case_id in case_ids:
+        csv_path = os.path.join(folder_path, f"{case_id}.csv")
+        # check if embedding csv file exist
+        if os.path.exists(csv_path):
+            df = pd.read_csv(csv_path)
+            
+            # Ignore x_coord, y_coord and keep the rest as feature vectors
+            features = df.iloc[:, 2:].values  
+            patch_features.append(features)
+            labels.append(labels_dict[case_id])
+        else:
+            print(f"Warning: {case_id}.csv not found. Skipping this case.")
+    
+    return patch_features, labels
