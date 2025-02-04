@@ -227,8 +227,8 @@ if __name__ == '__main__':
     since = time.time()
     
     # training and validation data preparation
-    train_patch_features, train_labels = load_data(args.train_folder, args.train_labels)
-    val_patch_features, val_labels = load_data(args.val_folder, args.val_labels)
+    train_patch_features, train_labels, _ = load_data(args.train_folder, args.train_labels)
+    val_patch_features, val_labels, _ = load_data(args.val_folder, args.val_labels)
     
     train_dataset = SlideBagDataset(train_patch_features, train_labels)
     val_dataset = SlideBagDataset(val_patch_features, val_labels)

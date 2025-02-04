@@ -143,6 +143,9 @@ def load_data(folder_path, label_csv):
     patch_features: list of ndarrays
     
     labels: list of ints
+    
+    slide_filenames: list of str
+        List of slide filenames corresponding to the loaded cases.
 
     """
     # read the metadata containing case_id and their ground_truth
@@ -150,7 +153,7 @@ def load_data(folder_path, label_csv):
     case_ids = label_df['case_id'].tolist()
     labels_dict = label_df.set_index('case_id')['ground_truth'].to_dict()
     
-    patch_features, labels = [], []
+    patch_features, labels, slide_filenames = [], [], []
     
     for case_id in case_ids:
         csv_path = os.path.join(folder_path, f"{case_id}.csv")
@@ -162,7 +165,8 @@ def load_data(folder_path, label_csv):
             features = df.iloc[:, 2:].values  
             patch_features.append(features)
             labels.append(labels_dict[case_id])
+            slide_filenames.append(case_id)  # Store the case_id as slide filename
         else:
             print(f"Warning: {case_id}.csv not found. Skipping this case.")
     
-    return patch_features, labels
+    return patch_features, labels, slide_filenames
