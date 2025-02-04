@@ -12,18 +12,34 @@ as the input, together with a metadata spreadsheet containin case_id and ground_
 
 Parameters
 ----------
-# TODO
+test_folder: str
+    Path to validation data folder.
+    
+test_labels: str
+    Path to validation label CSV.
 
+model: str
+    Path to saved model.
+
+k_instances: int
+    Number of instances per bag.
+    
+output: str
+    Path to output folder.
 """
 
 # Package Import
-from tqdm import tqdm
+import os
 import time
 import argparse
+from tqdm import tqdm
+
 import pandas as pd
+
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+
 from sklearn.metrics import confusion_matrix
 
 from utils.helper_class_pytorch import SlideBagDataset, AttentionMIL
@@ -167,12 +183,16 @@ if __name__ == '__main__':
                         help='Path to saved model')
     parser.add_argument('--k_instances', type=int, default=500, help='Number of instances per bag')
     parser.add_argument('--output', type=str, 
-                        default='.', 
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output', 
                         help='Path to output folder')
 
     args = parser.parse_args()
     
     since = time.time()
+    
+    cohort_id = os.path.basename(args.test_folder)
+    # make sure output folder exists
+    os.makedirs(f"{args.output}/{cohort_id}", exist_ok=True)
     
     # testing data preparation
     test_patch_features, test_labels, test_slide_filenames = load_data(args.test_folder, args.test_labels)
@@ -196,6 +216,24 @@ if __name__ == '__main__':
 
     # TODO 1: run script for 10 times (from test_loader to model inference)
     # TODO 2: save outputs - top1_results, top3_results, individual_results
+    
+    df_top1_results = pd.DataFrame(list(top1_results.items()))
+    df_top1_results.to_csv(
+        f"{args.output}/{cohort_id}/{cohort_id}_top1_accuracy.csv", 
+        index=False, header=False
+        )
+    
+    df_top3_results = pd.DataFrame(list(top3_results.items()))
+    df_top3_results.to_csv(
+        f"{args.output}/{cohort_id}/{cohort_id}_top3_accuracy.csv", 
+        index=False, header=False
+        )
+    
+    df_individual_results = pd.DataFrame(individual_results)
+    df_individual_results.to_csv(
+        f"{args.output}/{cohort_id}/{cohort_id}_individual_results.csv", 
+        index=False
+        )
 
     # Print the total runtime
     time_elapsed = time.time() - since
