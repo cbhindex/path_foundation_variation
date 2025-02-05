@@ -83,16 +83,16 @@ if __name__ == "__main__":
     # define argument parser
     parser = argparse.ArgumentParser(description="Sort and organise embeddings.")
     parser.add_argument("--input_folder", type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_1_by_class",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_4_by_class",
                         help="Path to the input folder containing subfolders with CSV files.")
     parser.add_argument("--output_folder", type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_1",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_4",
                         help="Path to the output folder where CSV files will be copied.")
     parser.add_argument("--csv_output_folder", type=str, 
                         default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels",
                         help="Path to the folder where the summary CSV will be stored.")
     parser.add_argument("--csv_filename", type=str, 
-                        default="cohort_1",
+                        default="cohort_4",
                         help="Filename for the output CSV storing case IDs and ground truths.")
     args = parser.parse_args()
     
