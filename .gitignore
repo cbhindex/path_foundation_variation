@@ -11,4 +11,3 @@ __pycache__/
 labels/
 models/
 train_log
-helper_scripts/
