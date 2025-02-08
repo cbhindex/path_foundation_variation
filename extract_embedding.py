@@ -126,15 +126,31 @@ if __name__ == "__main__":
     model_path = args.model_path
     path_foundation = TFSMLayer(model_path, call_endpoint="serving_default")
     
-    
-    # List all WSI and tile files
-    wsi_files = sorted([f for f in os.listdir(args.wsi_path) if f.endswith((".svs", ".ndpi", "tif"))])
-    tile_files = sorted([f for f in os.listdir(args.tile_path) if f.endswith(".h5")])
-    
     # Ensure output directory exists
     os.makedirs(args.output_path, exist_ok=True)
+    
+    # List existing embedding files (without extensions)
+    embedding_files = set(f.replace(".csv", "") for f in os.listdir(args.output_path) if f.endswith(".csv"))
+    
+    # List all WSI and tile files
+    wsi_files = sorted([f for f in os.listdir(args.wsi_path) if f.endswith((".svs", ".ndpi", ".tif"))])
+    tile_files = sorted([f for f in os.listdir(args.tile_path) if f.endswith(".h5")])
+    
+    # Filter out WSIs and tiles that already have corresponding embeddings
+    filtered_wsi_files = []
+    filtered_tile_files = []
+    
+    for wsi_file, tile_file in zip(wsi_files, tile_files):
+        base_name = os.path.splitext(wsi_file)[0]  # Get filename without extension
+        if base_name not in embedding_files:  # If embedding doesn't exist, add to processing list
+            filtered_wsi_files.append(wsi_file)
+            filtered_tile_files.append(tile_file)
+    
+    print(f"Skipping {len(wsi_files) - len(filtered_wsi_files)} slides that already have embeddings.")
+    print(f"Processing {len(filtered_wsi_files)} slides.")
 
-    for wsi_file, tile_file in tqdm(zip(wsi_files, tile_files), desc="Processing Slides", total=len(wsi_files)):
+    for wsi_file, tile_file in tqdm(zip(filtered_wsi_files, filtered_tile_files), desc="Processing Slides", total=len(filtered_wsi_files)):
+
         # Ensure the filenames match (excluding extensions)
         if os.path.splitext(wsi_file)[0] != os.path.splitext(tile_file)[0]:
             print(f"Skipping {wsi_file} and {tile_file}: filenames do not match.")
