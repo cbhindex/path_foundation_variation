@@ -79,7 +79,7 @@ def collate_fn_random_sampling(batch, k_tiles=100):
         patch_features is a tensor of shape [n_patches_in_bag, 384] representing 
         the patch feature vectors, and label is the slide-level label.
         
-    K: int 
+    k_tiles: int 
         number of patches to sample from each bag. If the bag has fewer than or 
         equal to K patches, all patches are selected.
     
@@ -91,8 +91,10 @@ def collate_fn_random_sampling(batch, k_tiles=100):
     labels: tensor 
         tensor of slide-level labels.
     """
+    random.seed(42)
+    
     batch_patches = []
-    labels = torch.tensor([item[1] for item in batch])  # List of slide-level labels
+    labels = torch.tensor([item[1] for item in batch], dtype=torch.long)  # Ensure correct dtype for labels
 
     for item in batch:
         patch_features = item[0]  # Patch features for the current slide
