@@ -20,9 +20,6 @@ test_labels: str
 
 model: str
     Path to saved model.
-
-k_instances: int
-    Number of instances per bag.
     
 output: str
     Path to output folder.
@@ -40,10 +37,8 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-from sklearn.metrics import confusion_matrix
-
 from utils.helper_class_pytorch import SlideBagDataset, AttentionMIL
-from utils.helper_functions_pytorch import load_data, collate_fn_random_sampling
+from utils.helper_functions_pytorch import load_data, collate_fn_variable_size
 
 
 #################### define function for model inference ####################
@@ -106,16 +101,22 @@ def evaluate_model(model, test_loader, slide_filenames, device, num_class=15):
                     # Forward pass
                     output, _ = model(patches)
                     probabilities = F.softmax(output, dim=0)
+                    # Extract top-3 and top-5 predictions and probabilities
                     top3_probs, top3_classes = torch.topk(probabilities, 3)
+                    top5_probs, top5_classes = torch.topk(probabilities, 5)
                     
                     # As the labels in the dataset is ranged from 1 to 15, but CrossEntropyLoss 
                     # expects the labels to be in the range 0 to num_classes - 1, so we need to 
                     # adjust the labels to be in the range [0, 14] instead of [1, 15]
-                    predicted_class = top3_classes[0].item() + 1  # Map back to [1, 15]
+                    # Map predictions back to range [1, 15]
+                    top5_preds = (top5_classes.cpu().numpy() + 1).tolist()
+                    predicted_class = top5_preds[0]
                     true_label = batch_labels[i].item() + 1  # Map back to [1, 15]
                     
                     top1_correct = int(predicted_class == true_label)
-                    top3_correct_case = int(true_label in (top3_classes.cpu().numpy() + 1))
+                    top3_correct_case = int(true_label in (top3_classes.cpu().numpy() + 1)) # Map back to [1, 15]
+                    # Check if ground truth is in top-5 predictions
+                    top5_correct_case = int(true_label in top5_preds)
                     
                     total += 1
                     correct += top1_correct
@@ -134,14 +135,19 @@ def evaluate_model(model, test_loader, slide_filenames, device, num_class=15):
                     individual_results.append({
                         "slide_id": slide_id,  # Actual case ID
                         "ground_truth": true_label,
-                        "top_1_pred": predicted_class, # already mapped back to [1, 15] so no need to +1
-                        "top_1_prob": top3_probs[0].item(),
-                        "top_2_pred": top3_classes[1].item() + 1,
-                        "top_2_prob": top3_probs[1].item(),
-                        "top_3_pred": top3_classes[2].item() + 1,
-                        "top_3_prob": top3_probs[2].item(),
+                        "top_1_pred": top5_preds[0],
+                        "top_1_prob": top5_probs[0].item(),
+                        "top_2_pred": top5_preds[1],
+                        "top_2_prob": top5_probs[1].item(),
+                        "top_3_pred": top5_preds[2],
+                        "top_3_prob": top5_probs[2].item(),
+                        "top_4_pred": top5_preds[3],
+                        "top_4_prob": top5_probs[3].item(),
+                        "top_5_pred": top5_preds[4],
+                        "top_5_prob": top5_probs[4].item(),
                         "top_1_correct": top1_correct,
-                        "top_3_correct": top3_correct_case
+                        "top_3_correct": top3_correct_case,
+                        "top_5_correct": top5_correct_case
                     })
                     
                     # Update progress bar after processing each slide
@@ -173,15 +179,14 @@ if __name__ == '__main__':
     # define argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--test_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_4",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_1",
                         help='Path to validation data folder')
     parser.add_argument('--test_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/cohort_4.csv", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/cohort_1_test.csv", 
                         help='Path to validation label CSV')
     parser.add_argument('--model', type=str, 
                         default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/mil_best_model_state_dict_epoch_37.pth", 
                         help='Path to saved model')
-    parser.add_argument('--k_instances', type=int, default=500, help='Number of instances per bag')
     parser.add_argument('--output', type=str, 
                         default='/home/digitalpathology/workspace/path_foundation_stain_variation/output', 
                         help='Path to output folder')
@@ -199,7 +204,7 @@ if __name__ == '__main__':
     test_dataset = SlideBagDataset(test_patch_features, test_labels)
     test_loader = DataLoader(
         test_dataset, batch_size=32, shuffle=False, 
-        collate_fn=lambda x: collate_fn_random_sampling(x, args.k_instances)
+        collate_fn=collate_fn_variable_size
         )
 
     # debug print
@@ -213,9 +218,6 @@ if __name__ == '__main__':
     # Run model evaluation
     top1_results, top3_results, individual_results = evaluate_model(
         model, test_loader, test_slide_filenames, device)
-
-    # TODO 1: run script for 10 times (from test_loader to model inference)
-    # TODO 2: save outputs - top1_results, top3_results, individual_results
     
     df_top1_results = pd.DataFrame(list(top1_results.items()))
     df_top1_results.to_csv(
