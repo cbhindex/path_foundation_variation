@@ -58,3 +58,17 @@ class AttentionMIL(nn.Module):
         output = self.classifier(slide_representation)  # Shape: [num_classes]
         
         return output, attention_weights
+    
+# Define a new class to extract slide-level embeddings
+class AttentionMIL_EmbeddingExtractor(AttentionMIL):
+    def forward(self, x):
+        """
+        Modified forward method to return only slide-level embeddings.
+        """
+        with torch.no_grad():
+            attention_weights = torch.tanh(self.attention(x))
+            attention_weights = F.softmax(self.attention_score(attention_weights), dim=0)
+            slide_representation = torch.sum(attention_weights * x, dim=0)  # Slide embedding
+        return slide_representation
+    
+    
