@@ -188,6 +188,38 @@ if __name__ == '__main__':
     # # Generate t-SNE visualisation - both the interactive and still image version
     plot_tsne(embeddings, slide_ids, df_embeddings['ground_truth'].values, args.output)
     
+    # Read the existing HTML file
+    with open(os.path.join(args.output, "tsne_visualisation_interactive.html"), "r", encoding="utf-8") as f:
+        html_content = f.read()
+    
+    ########## below JavaScript code is provided by Jianan Chen for improve user experience ##########
+    # JavaScript code
+    js_code = """
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var plot = document.getElementsByClassName('plotly-graph-div')[0];
+    
+        plot.on('plotly_click', function(data) {
+            if (data.points.length > 0) {
+                var filename = data.points[0].customdata[0]; 
+                navigator.clipboard.writeText(filename).then(function() {
+                    alert("Copied to clipboard: " + filename);
+                }).catch(function(err) {
+                    console.error("Failed to copy: ", err);
+                });
+            }
+        });
+    });
+    </script>
+    """
+    
+    # Insert the JavaScript code before </body>
+    html_content = html_content.replace("</body>", js_code + "\n</body>")
+    
+    # Save the modified HTML
+    with open(os.path.join(args.output, "tsne_visualisation_interactive.html"), "w", encoding="utf-8") as f:
+        f.write(html_content)
+    
     print("Embedding extraction and visualisation completed.")
     
     # Print the total runtime
