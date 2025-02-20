@@ -56,6 +56,12 @@ from tensorflow.keras.layers import TFSMLayer
 from utils.helper_class_tf import WholeSlideBagTF
 from utils.helper_functions_tf import resize_transforms
 
+# Reduce XLA register pressure
+os.environ["XLA_FLAGS"] = "--xla_gpu_autotune_level=0"
+
+# Limit GPU memory growth to prevent out-of-memory errors
+os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
+
 #################### define slide processing function ####################
 
 def process_slide(tile_path, wsi_path, model, batch_size=32):
