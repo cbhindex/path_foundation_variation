@@ -104,7 +104,7 @@ def copy_and_rename_files(source_folder, target_folder, csv_output):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Batch copy and rename files with associated subfolders")
     parser.add_argument("--source_folder", type=str, 
-                        default="/media/digitalpathology2/My Passport/3d histech/HCA_Batch1",
+                        default="/media/digitalpathology2/My Passport/3d histech/HCA_Batch1/Copy",
                         help="Path to the source folder containing hospital subfolders")
     parser.add_argument("--target_folder", type=str, 
                         default="/media/digitalpathology2/My Passport/cohort_4_3dhistech",
