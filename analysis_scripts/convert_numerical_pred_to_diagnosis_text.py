@@ -33,8 +33,8 @@ diagnosis_mapping = {
 }
 
 # Define the input and output file paths (Change these when processing another file)
-input_file = "/mnt/data/cohort_1_individual_results.csv"  # Change this for each file
-output_file = "/mnt/data/cohort_1_individual_results_modified.csv"  # Change accordingly
+input_file = "/home/digitalpathology/workspace/path_foundation_stain_variation/output/cohort_4/cohort_4_individual_results.csv"  # Change this for each file
+output_file = "/home/digitalpathology/workspace/path_foundation_stain_variation/output/cohort_4/cohort_4_individual_results_text.csv"  # Change accordingly
 
 # Load the CSV file
 df = pd.read_csv(input_file)
