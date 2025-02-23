@@ -139,7 +139,7 @@ if __name__ == "__main__":
     embedding_files = set(f.replace(".csv", "") for f in os.listdir(args.output_path) if f.endswith(".csv"))
     
     # List all WSI and tile files
-    wsi_files = sorted([f for f in os.listdir(args.wsi_path) if f.endswith((".svs", ".ndpi", ".tif"))])
+    wsi_files = sorted([f for f in os.listdir(args.wsi_path) if f.endswith((".svs", ".ndpi", ".tif", ".mrxs"))])
     tile_files = sorted([f for f in os.listdir(args.tile_path) if f.endswith(".h5")])
     
     # Filter out WSIs and tiles that already have corresponding embeddings
