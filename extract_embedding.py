@@ -43,10 +43,10 @@ import argparse
 from tqdm import tqdm
 import os
 
-import numpy as np
+#import numpy as np
 import pandas as pd
 from PIL import Image
-import h5py
+#import h5py
 
 from openslide import OpenSlide
 

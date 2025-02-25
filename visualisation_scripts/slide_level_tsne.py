@@ -10,6 +10,7 @@ This script computes the slide-level embeddings using the trained model
 and then visualises the slide-level embeddings with t-SNE.
 
 Now it also adds prediction and confidence score information to the interactive t-SNE plot.
+
 """
 
 # Package Import
