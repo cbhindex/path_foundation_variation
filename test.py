@@ -23,6 +23,7 @@ model: str
     
 output: str
     Path to output folder.
+    
 """
 
 # Package Import
@@ -174,6 +175,25 @@ def evaluate_model(model, test_loader, slide_filenames, device, num_class=15):
     
     return top1_results, top3_results, individual_results
 
+# Define the mapping dictionary for numerical values to diagnosis text
+diagnosis_mapping = {
+    1: "MPNST",
+    2: "Dermatofibrosarcoma protuberans",
+    3: "Neurofibroma",
+    4: "Nodular fasciitis",
+    5: "Desmoid Fibromatosis",
+    6: "Synovial sarcoma",
+    7: "Lymphoma",
+    8: "Glomus tumour",
+    9: "Intramuscular myxoma",
+    10: "Ewing",
+    11: "Schwannoma",
+    12: "Myxoid liposarcoma",
+    13: "Leiomyosarcoma",
+    14: "Solitary fibrous tumour",
+    15: "Low grade fibromyxoid sarcoma"
+}
+
 # Main function
 if __name__ == '__main__':
     # define argument parser
@@ -236,6 +256,25 @@ if __name__ == '__main__':
         f"{args.output}/{cohort_id}/{cohort_id}_individual_results.csv", 
         index=False
         )
+    
+    # convert numerical diagnostic labels to text for pathologist case review
+    # Define the input and output file paths (Change these when processing another file)
+    text_csv_input_file = f"{args.output}/{cohort_id}/{cohort_id}_individual_results.csv"
+    text_csv_output_file = f"{args.output}/{cohort_id}/{cohort_id}_individual_results_diagnosis_in_text.csv"
+
+    # Load the CSV file
+    text_csv_df = pd.read_csv(text_csv_input_file)
+    
+    # Columns to replace numerical values with diagnosis text
+    columns_to_replace = ["ground_truth", "top_1_pred", "top_2_pred", "top_3_pred", "top_4_pred", "top_5_pred"]
+    
+    # Replace numerical values with diagnosis text
+    for col in columns_to_replace:
+        if col in text_csv_df.columns:
+            text_csv_df[col] = text_csv_df[col].map(diagnosis_mapping)
+    
+    # Save the modified file
+    text_csv_df.to_csv(text_csv_output_file, index=False)
 
     # Print the total runtime
     time_elapsed = time.time() - since
