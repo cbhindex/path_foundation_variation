@@ -11,6 +11,23 @@ and then visualises the slide-level embeddings with t-SNE.
 
 Now it also adds prediction and confidence score information to the interactive t-SNE plot.
 
+Parameters
+----------
+test_folder: str
+    Path to validation data folder.
+    
+test_labels: str
+    Path to validation label CSV.
+
+prediction_csv: str
+    Path to prediction results CSV.
+
+model: str
+    Path to saved model.
+    
+output: str
+    Path to output folder.
+
 """
 
 # Package Import
@@ -92,7 +109,9 @@ def plot_tsne(embeddings, slide_ids, labels, predictions, confidences, output_pa
 
     # Define color palette
     unique_labels = df_tsne['Diagnosis'].unique()
-    color_map = px.colors.qualitative.Plotly
+    color_map = plt.get_cmap("tab20").colors  # Get Tab20 colormap
+    color_map = [f"rgb({int(r*255)},{int(g*255)},{int(b*255)})" for r, g, b in color_map]  # Convert to Plotly format
+    #color_map = px.colors.qualitative.Plotly
     label_to_color = {label: color_map[i % len(color_map)] for i, label in enumerate(unique_labels)}
 
     # Save interactive plot
@@ -113,7 +132,13 @@ def plot_tsne(embeddings, slide_ids, labels, predictions, confidences, output_pa
 
     # Save static plot
     plt.figure(figsize=(12, 8))
-    colors = [label_to_color[label] for label in df_tsne['Diagnosis']]
+    
+    #colors = [label_to_color[label] for label in df_tsne['Diagnosis']]
+    tab20_cmap = plt.get_cmap("tab20")
+    unique_labels_list = list(unique_labels)
+    label_to_color_static = {label: tab20_cmap(i / max(1, len(unique_labels_list)-1)) for i, label in enumerate(unique_labels_list)}
+    colors = [label_to_color_static[label] for label in df_tsne['Diagnosis']]
+    
     plt.scatter(df_tsne['tSNE1'], df_tsne['tSNE2'], c=colors, s=30, alpha=0.9)
 
     plt.xlabel("t-SNE Feature 1")
@@ -130,19 +155,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--test_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_4",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_4_no_scan_variation",
                         help='Path to validation data folder')
     parser.add_argument('--test_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/cohort_4.csv", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/cohort_4_no_scan_variation.csv", 
                         help='Path to validation label CSV')
     parser.add_argument('--prediction_csv', type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/cohort_4/cohort_4_individual_results.csv', 
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/cohort_4_no_scan_variation/cohort_4_individual_results.csv', 
                         help='Path to prediction results CSV')
     parser.add_argument('--model', type=str, 
                         default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/mil_best_model_state_dict_epoch_37.pth", 
                         help='Path to saved model')
     parser.add_argument('--output', type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/cohort_4', 
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/cohort_4_no_scan_variation', 
                         help='Path to output folder')
 
     args = parser.parse_args()
