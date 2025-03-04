@@ -13,3 +13,5 @@ models/
 train_log
 visualisation/
 helper_scripts/
+extract_embedding_normalisation.py
+assets/
