@@ -2,7 +2,7 @@
 embeddings/
 metadata/
 output/
-source_wsi/
+output_7_2_1/
 tiles/
 utils/__pycache__/
 __pycache__/
@@ -10,8 +10,7 @@ __pycache__/
 *.sh
 labels/
 models/
-train_log
+train_log/
 visualisation/
 helper_scripts/
 extract_embedding_normalisation.py
-assets/
