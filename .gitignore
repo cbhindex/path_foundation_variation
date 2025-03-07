@@ -2,7 +2,7 @@
 embeddings/
 metadata/
 output/
-output_7_2_1/
+output_721/
 tiles/
 utils/__pycache__/
 __pycache__/
@@ -12,5 +12,4 @@ labels/
 models/
 train_log/
 visualisation/
-helper_scripts/
 extract_embedding_normalisation.py
