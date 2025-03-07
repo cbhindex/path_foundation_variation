@@ -51,6 +51,9 @@ lr: float
 
 patience: int
     Number of patient epochs for early stop
+    
+num_class: int
+    Number of class
 
 """
 
@@ -71,7 +74,7 @@ from utils.helper_functions_pytorch import collate_fn_random_sampling, load_data
 # Train function
 def train_model(
         train_loader, val_loader, model, criterion, optimizer, device, 
-        model_folder, num_class=15, epochs=50, patience=10
+        model_folder, num_class=14, epochs=50, patience=10
         ):
     
     # Ensure the output folder (the folder to save model) exists
@@ -93,10 +96,10 @@ def train_model(
         for batch_patches, batch_labels in train_loader:
             optimizer.zero_grad()  # Zero the gradients
             
-            # As the labels in the dataset is ranged from 1 to 15, but CrossEntropyLoss 
+            # As the labels in the dataset is ranged from 1 to N, but CrossEntropyLoss 
             # expects the labels to be in the range 0 to num_classes - 1, so we need to 
-            # adjust the labels to be in the range [0, 14] instead of [1, 15]
-            batch_labels = batch_labels - 1  # Adjust label range from [1, 15] to [0, 14] for CrossEntropyLoss
+            # adjust the labels to be in the range [0, 14] instead of [1, N]
+            batch_labels = batch_labels - 1  # Adjust label range from [1, N] to [0, N-1] for CrossEntropyLoss
             batch_labels = batch_labels.to(device)
 
             # Process each slide (bag) separately since each has variable patches
@@ -128,10 +131,10 @@ def train_model(
         with torch.no_grad():  # No need to calculate gradients during validation
             for batch_patches, batch_labels in val_loader:
                 
-                # As the labels in the dataset is ranged from 1 to 15, but CrossEntropyLoss 
+                # As the labels in the dataset is ranged from 1 to N, but CrossEntropyLoss 
                 # expects the labels to be in the range 0 to num_classes - 1, so we need to 
-                # adjust the labels to be in the range [0, 14] instead of [1, 15]
-                batch_labels = batch_labels - 1 # Adjust label range from [1, 15] to [0, 14]
+                # adjust the labels to be in the range [0, 14] instead of [1, N]
+                batch_labels = batch_labels - 1 # Adjust label range from [1, N] to [0, N-1]
                 batch_labels = batch_labels.to(device)
                 
                 for i, patches in enumerate(batch_patches):
@@ -163,7 +166,7 @@ def train_model(
         scheduler.step(val_loss) 
         
         # Print per-class accuracy
-        for i in range(15):
+        for i in range(num_class):
             if class_total[i] > 0:
                 class_accuracy = 100 * class_correct[i] / class_total[i]
                 print(f"Class {i+1} Val Acc: {class_accuracy:.2f}%")
@@ -219,6 +222,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=200, help='Number of training epochs')
     parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
     parser.add_argument('--patience', type=int, default=30, help='Number of patient epochs for early stop')
+    parser.add_argument('--num_class', type=int, default=14, help='Number of class')
     
     args = parser.parse_args()
     
@@ -245,7 +249,7 @@ if __name__ == '__main__':
     
     # define device and model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = AttentionMIL(input_dim=384, attention_dim=128, num_classes=15)
+    model = AttentionMIL(input_dim=384, attention_dim=128, num_classes=args.num_class)
     
     # define criterion and optimizer
     criterion = nn.CrossEntropyLoss()
@@ -259,7 +263,7 @@ if __name__ == '__main__':
     train_model(
         train_loader, val_loader, model, criterion, optimizer, device, 
         model_folder=args.model_folder,
-        num_class=15, epochs=args.epochs, patience=args.patience
+        num_class=args.num_class, epochs=args.epochs, patience=args.patience
         )
 
     # Print the total runtime

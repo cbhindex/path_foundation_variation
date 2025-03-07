@@ -78,11 +78,11 @@ if __name__ == "__main__":
     parser.add_argument("--source_csv", type=str, 
                         default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/cohort_1.csv",
                         help="Path to the input CSV file containing case IDs and ground truths.")
-    parser.add_argument("--train_size", type=int, default=70,
+    parser.add_argument("--train_size", type=int, default=60,
                         help="Percentage of training size (0-100).")
     parser.add_argument("--val_size", type=int, default=20,
                         help="Percentage of validation size (0-100).")
-    parser.add_argument("--test_size", type=int, default=10,
+    parser.add_argument("--test_size", type=int, default=20,
                         help="Percentage of testing size (0-100).")
     parser.add_argument("--output_folder", type=str, 
                         default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels",
