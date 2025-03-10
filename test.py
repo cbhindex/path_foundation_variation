@@ -44,7 +44,7 @@ from utils.helper_functions_pytorch import load_data, collate_fn_variable_size
 
 #################### define function for model inference ####################
 
-def evaluate_model(model, test_loader, slide_filenames, device, num_class=15):
+def evaluate_model(model, test_loader, slide_filenames, device, num_class):
     """
     Function to evaluate the model on a test dataset.
     
@@ -63,7 +63,7 @@ def evaluate_model(model, test_loader, slide_filenames, device, num_class=15):
         Device to run the evaluation on (CPU or GPU).
         
     num_class : int, optional
-        Number of classes, by default 15.
+        Number of classes.
 
     Returns
     -------
@@ -91,7 +91,7 @@ def evaluate_model(model, test_loader, slide_filenames, device, num_class=15):
         with torch.no_grad():  # No need to calculate gradients during validation
             for batch_idx, (batch_patches, batch_labels) in enumerate(test_loader):
                 
-                # Adjust label range from [1, 15] to [0, 14]
+                # Adjust label range from [1, X] to [0, X - 1]
                 batch_labels = batch_labels - 1
                 batch_labels = batch_labels.to(device)
                 
@@ -106,16 +106,16 @@ def evaluate_model(model, test_loader, slide_filenames, device, num_class=15):
                     top3_probs, top3_classes = torch.topk(probabilities, 3)
                     top5_probs, top5_classes = torch.topk(probabilities, 5)
                     
-                    # As the labels in the dataset is ranged from 1 to 15, but CrossEntropyLoss 
-                    # expects the labels to be in the range 0 to num_classes - 1, so we need to 
-                    # adjust the labels to be in the range [0, 14] instead of [1, 15]
-                    # Map predictions back to range [1, 15]
+                    # As the labels in the dataset is ranged from 1 to X, but CrossEntropyLoss 
+                    # expects the labels to be in the range 0 to X - 1, so we need to 
+                    # adjust the labels to be in the range [0, X - 1] instead of [1, X]
+                    # Map predictions back to range [1, X]
                     top5_preds = (top5_classes.cpu().numpy() + 1).tolist()
                     predicted_class = top5_preds[0]
-                    true_label = batch_labels[i].item() + 1  # Map back to [1, 15]
+                    true_label = batch_labels[i].item() + 1  # Map back to [1, X]
                     
                     top1_correct = int(predicted_class == true_label)
-                    top3_correct_case = int(true_label in (top3_classes.cpu().numpy() + 1)) # Map back to [1, 15]
+                    top3_correct_case = int(true_label in (top3_classes.cpu().numpy() + 1)) # Map back to [1, X]
                     # Check if ground truth is in top-5 predictions
                     top5_correct_case = int(true_label in top5_preds)
                     
@@ -176,22 +176,38 @@ def evaluate_model(model, test_loader, slide_filenames, device, num_class=15):
     return top1_results, top3_results, individual_results
 
 # Define the mapping dictionary for numerical values to diagnosis text
+# diagnosis_mapping_15class = {
+#     1: "MPNST",
+#     2: "Dermatofibrosarcoma protuberans",
+#     3: "Neurofibroma",
+#     4: "Nodular fasciitis",
+#     5: "Desmoid Fibromatosis",
+#     6: "Synovial sarcoma",
+#     7: "Lymphoma",
+#     8: "Glomus tumour",
+#     9: "Intramuscular myxoma",
+#     10: "Ewing",
+#     11: "Schwannoma",
+#     12: "Myxoid liposarcoma",
+#     13: "Leiomyosarcoma",
+#     14: "Solitary fibrous tumour",
+#     15: "Low grade fibromyxoid sarcoma"
+# }
 diagnosis_mapping = {
-    1: "MPNST",
-    2: "Dermatofibrosarcoma protuberans",
-    3: "Neurofibroma",
-    4: "Nodular fasciitis",
-    5: "Desmoid Fibromatosis",
-    6: "Synovial sarcoma",
-    7: "Lymphoma",
-    8: "Glomus tumour",
-    9: "Intramuscular myxoma",
-    10: "Ewing",
-    11: "Schwannoma",
-    12: "Myxoid liposarcoma",
-    13: "Leiomyosarcoma",
-    14: "Solitary fibrous tumour",
-    15: "Low grade fibromyxoid sarcoma"
+    1: "Dermatofibrosarcoma protuberans",
+    2: "Neurofibroma",
+    3: "Nodular fasciitis",
+    4: "Desmoid Fibromatosis",
+    5: "Synovial sarcoma",
+    6: "Lymphoma",
+    7: "Glomus tumour",
+    8: "Intramuscular myxoma",
+    9: "Ewing",
+    10: "Schwannoma",
+    11: "Myxoid liposarcoma",
+    12: "Leiomyosarcoma",
+    13: "Solitary fibrous tumour",
+    14: "Low grade fibromyxoid sarcoma"
 }
 
 # Main function
@@ -199,13 +215,13 @@ if __name__ == '__main__':
     # define argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--test_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_4",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/new_cohort_2",
                         help='Path to validation data folder')
     parser.add_argument('--test_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/cohort_4.csv", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/new_cohort_2.csv", 
                         help='Path to validation label CSV')
     parser.add_argument('--model', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/mil_best_model_state_dict_epoch_37.pth", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/mil_best_model_state_dict_epoch_39.pth", 
                         help='Path to saved model')
     parser.add_argument('--output', type=str, 
                         default='/home/digitalpathology/workspace/path_foundation_stain_variation/output', 
@@ -232,12 +248,12 @@ if __name__ == '__main__':
 
     # Load the trained model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = AttentionMIL(input_dim=384, attention_dim=128, num_classes=15).to(device)
+    model = AttentionMIL(input_dim=384, attention_dim=128, num_classes=14).to(device)
     model.load_state_dict(torch.load(args.model))
     
     # Run model evaluation
     top1_results, top3_results, individual_results = evaluate_model(
-        model, test_loader, test_slide_filenames, device)
+        model, test_loader, test_slide_filenames, device, num_class=14)
     
     df_top1_results = pd.DataFrame(list(top1_results.items()))
     df_top1_results.to_csv(

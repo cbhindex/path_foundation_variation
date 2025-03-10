@@ -204,10 +204,10 @@ if __name__ == '__main__':
     # define argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_1", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_1_and_variation", 
                         help='Path to training data folder')
     parser.add_argument('--train_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/cohort_1_train.csv",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/cohort_1_train_and_variation.csv",
                         help='Path to training label CSV')
     parser.add_argument('--val_folder', type=str, 
                         default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_1",
