@@ -34,9 +34,9 @@ output: str
 import os
 import time
 import argparse
-from tqdm import tqdm
+# from tqdm import tqdm
 
-import numpy as np
+#import numpy as np
 import pandas as pd
 
 import plotly.express as px
@@ -48,49 +48,42 @@ from torch.utils.data import DataLoader
 from sklearn.manifold import TSNE
 
 from utils.helper_class_pytorch import SlideBagDataset, AttentionMIL_EmbeddingExtractor
-from utils.helper_functions_pytorch import load_data, collate_fn_variable_size
+from utils.helper_functions_pytorch import load_data, collate_fn_variable_size, extract_slide_embeddings
 
 # Diagnosis mapping
+# DIAGNOSIS_MAPPING_15CLASSES = {
+#     1: "MPNST",
+#     2: "Dermatofibrosarcoma protuberans",
+#     3: "Neurofibroma",
+#     4: "Nodular fasciitis",
+#     5: "Desmoid Fibromatosis",
+#     6: "Synovial sarcoma",
+#     7: "Lymphoma",
+#     8: "Glomus tumour",
+#     9: "Intramuscular myxoma",
+#     10: "Ewing",
+#     11: "Schwannoma",
+#     12: "Myxoid liposarcoma",
+#     13: "Leiomyosarcoma",
+#     14: "Solitary fibrous tumour",
+#     15: "Low grade fibromyxoid sarcoma"
+# }
 DIAGNOSIS_MAPPING = {
-    1: "MPNST",
-    2: "Dermatofibrosarcoma protuberans",
-    3: "Neurofibroma",
-    4: "Nodular fasciitis",
-    5: "Desmoid Fibromatosis",
-    6: "Synovial sarcoma",
-    7: "Lymphoma",
-    8: "Glomus tumour",
-    9: "Intramuscular myxoma",
-    10: "Ewing",
-    11: "Schwannoma",
-    12: "Myxoid liposarcoma",
-    13: "Leiomyosarcoma",
-    14: "Solitary fibrous tumour",
-    15: "Low grade fibromyxoid sarcoma"
+    1: "Dermatofibrosarcoma protuberans",
+    2: "Neurofibroma",
+    3: "Nodular fasciitis",
+    4: "Desmoid Fibromatosis",
+    5: "Synovial sarcoma",
+    6: "Lymphoma",
+    7: "Glomus tumour",
+    8: "Intramuscular myxoma",
+    9: "Ewing",
+    10: "Schwannoma",
+    11: "Myxoid liposarcoma",
+    12: "Leiomyosarcoma",
+    13: "Solitary fibrous tumour",
+    14: "Low grade fibromyxoid sarcoma"
 }
-
-# TODO: separate extract_slide_embeddings to utils.
-
-# Function to extract embeddings
-def extract_slide_embeddings(model, test_loader, slide_filenames, device):
-    model.eval()
-    slide_embeddings = []
-    slide_ids = []
-
-    with tqdm(total=len(slide_filenames), desc="Extracting Embeddings", unit="slide") as pbar:
-        with torch.no_grad():
-            for batch_idx, (batch_patches, _) in enumerate(test_loader):
-                for i, patches in enumerate(batch_patches):
-                    patches = patches.to(device)
-                    slide_id = slide_filenames[batch_idx * test_loader.batch_size + i]
-
-                    slide_embedding = model(patches)
-
-                    slide_embeddings.append(slide_embedding.cpu().numpy())
-                    slide_ids.append(slide_id)
-                    pbar.update(1)
-
-    return np.array(slide_embeddings), slide_ids
 
 # Function to perform t-SNE visualization
 def plot_tsne(embeddings, slide_ids, labels, predictions, confidences, output_path):
@@ -184,7 +177,7 @@ if __name__ == '__main__':
 
     # Load trained model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = AttentionMIL_EmbeddingExtractor(input_dim=384, attention_dim=128, num_classes=15).to(device)
+    model = AttentionMIL_EmbeddingExtractor(input_dim=384, attention_dim=128, num_classes=14).to(device)
     model.load_state_dict(torch.load(args.model, map_location=device))
 
     # Extract slide-level embeddings

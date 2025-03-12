@@ -13,6 +13,7 @@ testing of classifier.
 
 # package import
 import os
+from tqdm import tqdm
 
 import random
 import numpy as np
@@ -172,3 +173,25 @@ def load_data(folder_path, label_csv):
             print(f"Warning: {case_id}.csv not found. Skipping this case.")
     
     return patch_features, labels, slide_filenames
+
+#################### generate slide-level embeddings using trained model ####################
+
+def extract_slide_embeddings(model, test_loader, slide_filenames, device):
+    model.eval()
+    slide_embeddings = []
+    slide_ids = []
+
+    with tqdm(total=len(slide_filenames), desc="Extracting Embeddings", unit="slide") as pbar:
+        with torch.no_grad():
+            for batch_idx, (batch_patches, _) in enumerate(test_loader):
+                for i, patches in enumerate(batch_patches):
+                    patches = patches.to(device)
+                    slide_id = slide_filenames[batch_idx * test_loader.batch_size + i]
+
+                    slide_embedding = model(patches)
+
+                    slide_embeddings.append(slide_embedding.cpu().numpy())
+                    slide_ids.append(slide_id)
+                    pbar.update(1)
+
+    return np.array(slide_embeddings), slide_ids
