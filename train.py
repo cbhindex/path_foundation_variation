@@ -221,7 +221,7 @@ if __name__ == '__main__':
     parser.add_argument('--k_instances', type=int, default=500, help='Number of instances per bag')
     parser.add_argument('--epochs', type=int, default=200, help='Number of training epochs')
     parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
-    parser.add_argument('--patience', type=int, default=30, help='Number of patient epochs for early stop')
+    parser.add_argument('--patience', type=int, default=200, help='Number of patient epochs for early stop')
     parser.add_argument('--num_class', type=int, default=14, help='Number of class')
     
     args = parser.parse_args()

@@ -215,16 +215,16 @@ if __name__ == '__main__':
     # define argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--test_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/new_cohort_2",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_1",
                         help='Path to validation data folder')
     parser.add_argument('--test_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/new_cohort_2.csv", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/cohort_1_test.csv", 
                         help='Path to validation label CSV')
     parser.add_argument('--model', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/mil_best_model_state_dict_epoch_39.pth", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/trained_with_variation/mil_best_model_state_dict_epoch_39.pth", 
                         help='Path to saved model')
     parser.add_argument('--output', type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output', 
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/trained_with_variation', 
                         help='Path to output folder')
 
     args = parser.parse_args()
