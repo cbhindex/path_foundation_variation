@@ -21,9 +21,6 @@ test_labels: str
 
 prediction_csv: str
     Path to prediction results CSV.
-
-model: str
-    Path to saved model.
     
 output: str
     Path to output folder.
@@ -34,10 +31,11 @@ output: str
 import os
 import time
 import argparse
-# from tqdm import tqdm
+from tqdm import tqdm
 
-#import numpy as np
+import numpy as np
 import pandas as pd
+import random
 
 import plotly.express as px
 import matplotlib.pyplot as plt
@@ -47,8 +45,8 @@ from torch.utils.data import DataLoader
 
 from sklearn.manifold import TSNE
 
-from utils.helper_class_pytorch import SlideBagDataset, AttentionMIL_EmbeddingExtractor
-from utils.helper_functions_pytorch import load_data, collate_fn_variable_size, extract_slide_embeddings
+from utils.helper_class_pytorch import SlideBagDataset
+from utils.helper_functions_pytorch import load_data, collate_fn_variable_size
 
 # Diagnosis mapping
 # DIAGNOSIS_MAPPING_15CLASSES = {
@@ -84,6 +82,46 @@ DIAGNOSIS_MAPPING = {
     13: "Solitary fibrous tumour",
     14: "Low grade fibromyxoid sarcoma"
 }
+
+# TODO: maybe put this function to utils?
+def extract_random_slide_embeddings(test_loader, test_slide_filenames, nr_patch=3):
+    """
+    Randomly selects `nr_patch` patches for each slide instead of using a model-based approach.
+
+    Parameters:
+    - test_loader (DataLoader): DataLoader containing patch-level embeddings.
+    - test_slide_filenames (list): List of slide filenames corresponding to test_loader data.
+    - nr_patch (int): Number of patches to randomly select per slide. Default is 5.
+
+    Returns:
+    - slide_embeddings (np.array): Randomly selected patch embeddings.
+    - slide_ids (list): Corresponding slide IDs (not unique, as each slide has `nr_patch` entries).
+    """
+    slide_embeddings = []
+    slide_ids = []
+
+    with tqdm(total=len(test_slide_filenames), desc="Selecting Random Patches", unit="slide") as pbar:
+        for batch_idx, (batch_patches, _) in enumerate(test_loader):
+            for i, patches in enumerate(batch_patches):
+                slide_id = test_slide_filenames[batch_idx * test_loader.batch_size + i]
+                
+                # Convert to NumPy array (if it's a tensor)
+                patches_np = patches.cpu().numpy() if isinstance(patches, torch.Tensor) else patches
+                
+                # Ensure there are at least `nr_patch` samples to choose from
+                num_available_patches = patches_np.shape[0]
+                if num_available_patches < nr_patch:
+                    selected_patches = patches_np  # Take all available patches if less than `nr_patch`
+                else:
+                    selected_patches = patches_np[random.sample(range(num_available_patches), nr_patch)]
+                
+                for patch in selected_patches:
+                    slide_embeddings.append(patch)
+                    slide_ids.append(slide_id)
+                
+                pbar.update(1)
+
+    return np.array(slide_embeddings), slide_ids
 
 # Function to perform t-SNE visualization
 def plot_tsne(embeddings, slide_ids, labels, predictions, confidences, output_path):
@@ -148,19 +186,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--test_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_4_no_scan_variation",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/new_cohort_2",
                         help='Path to validation data folder')
     parser.add_argument('--test_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/cohort_4_no_scan_variation.csv", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/new_cohort_2.csv", 
                         help='Path to validation label CSV')
     parser.add_argument('--prediction_csv', type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/cohort_4_no_scan_variation/cohort_4_individual_results.csv', 
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/trained_without_variation/new_cohort_2/new_cohort_2_individual_results.csv', 
                         help='Path to prediction results CSV')
-    parser.add_argument('--model', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/mil_best_model_state_dict_epoch_37.pth", 
-                        help='Path to saved model')
     parser.add_argument('--output', type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/cohort_4_no_scan_variation', 
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/cohort_2', 
                         help='Path to output folder')
 
     args = parser.parse_args()
@@ -175,13 +210,8 @@ if __name__ == '__main__':
 
     print("Data loading completed.")
 
-    # Load trained model
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = AttentionMIL_EmbeddingExtractor(input_dim=384, attention_dim=128, num_classes=14).to(device)
-    model.load_state_dict(torch.load(args.model, map_location=device))
-
     # Extract slide-level embeddings
-    embeddings, slide_ids = extract_slide_embeddings(model, test_loader, test_slide_filenames, device)
+    embeddings, slide_ids = extract_random_slide_embeddings(test_loader, test_slide_filenames, nr_patch=3)
 
     # Load labels
     labels_df = pd.read_csv(args.test_labels)
