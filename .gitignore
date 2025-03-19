@@ -9,6 +9,7 @@ __pycache__/
 .spyproject/
 *.sh
 labels/
+labels_14classes/
 models/
 train_log/
 visualisation/

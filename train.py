@@ -173,8 +173,10 @@ def train_model(
             else:
                 print(f"Class {i+1} Val Acc: N/A (No samples)")
         
-        # Save the best model if it achieves the best validation accuracy
-        if val_loss < best_val_loss:
+        # Save the best model if it achieves the best validation accuracy / best loss
+        if val_loss <= best_val_loss or val_accuracy >= best_val_accuracy:
+        # if val_loss <= best_val_loss:
+        # if val_accuracy >= best_val_accuracy:
             best_val_loss = val_loss
             best_val_accuracy = val_accuracy
             best_epoch = epoch + 1  # Save the current epoch (1-based index)
@@ -204,23 +206,23 @@ if __name__ == '__main__':
     # define argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_1_and_variation", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_2_aperio_and_cohort_3_aperio", 
                         help='Path to training data folder')
     parser.add_argument('--train_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/cohort_1_train_and_variation.csv",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_2_aperio_and_cohort_3_aperio.csv",
                         help='Path to training label CSV')
     parser.add_argument('--val_folder', type=str, 
                         default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_1",
                         help='Path to validation data folder')
     parser.add_argument('--val_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/cohort_1_val.csv", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_1_val.csv", 
                         help='Path to validation label CSV')
     parser.add_argument('--model_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/trained_on_cohort_2_aperio_and_cohort_3_aperio", 
                         help='Path to saved model folder')
     parser.add_argument('--k_instances', type=int, default=500, help='Number of instances per bag')
     parser.add_argument('--epochs', type=int, default=200, help='Number of training epochs')
-    parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
+    parser.add_argument('--lr', type=float, default=0.0005, help='Learning rate')
     parser.add_argument('--patience', type=int, default=200, help='Number of patient epochs for early stop')
     parser.add_argument('--num_class', type=int, default=14, help='Number of class')
     
