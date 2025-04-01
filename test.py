@@ -215,16 +215,16 @@ if __name__ == '__main__':
     # define argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--test_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_4",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_1",
                         help='Path to validation data folder')
     parser.add_argument('--test_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_4_aperio.csv", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_1_test.csv", 
                         help='Path to validation label CSV')
     parser.add_argument('--model', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/trained_on_cohort_2_aperio_and_cohort_3_aperio/mil_best_model_state_dict_epoch_6.pth", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/trained_on_14slides_3dhistech/mil_best_model_state_dict_epoch_8.pth", 
                         help='Path to saved model')
     parser.add_argument('--output', type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/trained_on_cohort_2_aperio_and_cohort_3_aperio', 
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/trained_on_14slides_3dhistech', 
                         help='Path to output folder')
 
     args = parser.parse_args()

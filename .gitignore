@@ -13,5 +13,4 @@ labels_14classes/
 models/
 train_log/
 visualisation/
-extract_embedding_normalisation.py
-legacy_721_15classes/
+archive/
