@@ -18,6 +18,7 @@ from tqdm import tqdm
 import random
 import numpy as np
 import pandas as pd
+import h5py
 
 import torch
 from torch.utils.data import DataLoader
@@ -172,6 +173,66 @@ def load_data(folder_path, label_csv):
         else:
             print(f"Warning: {case_id}.csv not found. Skipping this case.")
     
+    return patch_features, labels, slide_filenames
+
+def load_data_h5(folder_path, label_csv):
+    """
+    Loads patch-level feature embeddings and labels from .h5 files.
+
+    Parameters
+    ----------
+    folder_path : str
+        Path to the folder containing .h5 files. Each file is named by its case ID
+        and includes two datasets: 'coords' (N x 2) and 'features' (N x m). Here
+        m is the size of embedding vector, for example Path Foundation is 384, and
+        UNI-V2 is 1536 etc.
+    
+    label_csv : str
+        Path to the metadata CSV with columns: 'case_id' and 'ground_truth'.
+
+    Returns
+    -------
+    patch_features : list of np.ndarray
+        List of feature arrays per slide, each of shape (N_patches, m_features).
+    
+    labels : list of int
+        List of class labels (ground truth) corresponding to each slide.
+    
+    slide_filenames : list of str
+        List of case IDs corresponding to the slides loaded.
+    """
+    # Load metadata CSV
+    label_df = pd.read_csv(label_csv)
+    case_ids = label_df['case_id'].tolist()
+    labels_dict = label_df.set_index('case_id')['ground_truth'].to_dict()
+
+    patch_features, labels, slide_filenames = [], [], []
+
+    for case_id in case_ids:
+        h5_path = os.path.join(folder_path, f"{case_id}.h5")
+        if os.path.exists(h5_path):
+            try:
+                with h5py.File(h5_path, 'r') as hf:
+                    if 'features' not in hf or 'coords' not in hf:
+                        print(f"Warning: Missing datasets in {case_id}.h5. Skipping.")
+                        continue
+
+                    features = hf['features'][:]
+                    coords = hf['coords'][:]
+                    
+                    if features.shape[0] != coords.shape[0]:
+                        print(f"Warning: Mismatch in coords/features length for {case_id}. Skipping.")
+                        continue
+
+                    patch_features.append(features)  # (N_patches, 1536)
+                    labels.append(labels_dict[case_id])
+                    slide_filenames.append(case_id)
+
+            except Exception as e:
+                print(f"Error reading {case_id}.h5: {e}. Skipping this case.")
+        else:
+            print(f"Warning: {case_id}.h5 not found. Skipping this case.")
+
     return patch_features, labels, slide_filenames
 
 #################### generate slide-level embeddings using trained model ####################

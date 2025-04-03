@@ -8,7 +8,9 @@ Created on Wed Jan 29 10:47:01 2025
 
 This script is to run the MIL classifier on embeddings for testing datasets. It 
 takes WSIs that have been converted into patch-level 384-dimensional feature embeddings 
-as the input, together with a metadata spreadsheet containin case_id and ground_truth.
+as the input (384 is the Google Path Foundation model embedding size, other foundation 
+model will have other size), together with a metadata spreadsheet containin 
+case_id and ground_truth.
 
 Parameters
 ----------
@@ -24,6 +26,9 @@ model: str
 output: str
     Path to output folder.
     
+emb_type: str, 
+    The embedding type, select from 'h5' or 'csv'
+    
 """
 
 # Package Import
@@ -33,13 +38,14 @@ import argparse
 from tqdm import tqdm
 
 import pandas as pd
+import numpy as np
 
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from utils.helper_class_pytorch import SlideBagDataset, AttentionMIL
-from utils.helper_functions_pytorch import load_data, collate_fn_variable_size
+from utils.helper_functions_pytorch import load_data, collate_fn_variable_size, load_data_h5
 
 
 #################### define function for model inference ####################
@@ -215,40 +221,52 @@ if __name__ == '__main__':
     # define argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--test_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_1",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_4",
                         help='Path to validation data folder')
     parser.add_argument('--test_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_1_test.csv", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_4_aperio_2april2025.csv", 
                         help='Path to validation label CSV')
     parser.add_argument('--model', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/trained_on_14slides_3dhistech/mil_best_model_state_dict_epoch_8.pth", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/path_foundation/trained_on_cohort_1_train/mil_best_model_state_dict_epoch_39.pth", 
                         help='Path to saved model')
     parser.add_argument('--output', type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/trained_on_14slides_3dhistech', 
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/path_foundation/trained_on_cohort_1_train', 
                         help='Path to output folder')
+    parser.add_argument('--emb_type', type=str, default='csv', choices=['h5', 'csv'],
+                        help='the embedding type, select from h5 or csv')
+    parser.add_argument('--cohort', type=str, default='cohort_4_aperio_2april2025', 
+                        help='text input for output folder')
 
     args = parser.parse_args()
     
     since = time.time()
     
-    cohort_id = os.path.basename(args.test_folder)
+    # cohort_id = os.path.basename(args.test_folder)
+    cohort_id = args.cohort
     # make sure output folder exists
     os.makedirs(f"{args.output}/{cohort_id}", exist_ok=True)
     
     # testing data preparation
-    test_patch_features, test_labels, test_slide_filenames = load_data(args.test_folder, args.test_labels)
+    if args.emb_type == 'csv':
+        test_patch_features, test_labels, test_slide_filenames = load_data(args.test_folder, args.test_labels)
+    elif args.emb_type == 'h5':
+        test_patch_features, test_labels, test_slide_filenames = load_data_h5(args.test_folder, args.test_labels)
+        
     test_dataset = SlideBagDataset(test_patch_features, test_labels)
     test_loader = DataLoader(
         test_dataset, batch_size=32, shuffle=False, 
         collate_fn=collate_fn_variable_size
         )
 
+    # different foundation model have different dimensions
+    emb_dim = np.shape(test_patch_features[0])[1]
+
     # debug print
     print("Data loading completed.")
 
     # Load the trained model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = AttentionMIL(input_dim=384, attention_dim=128, num_classes=14).to(device)
+    model = AttentionMIL(input_dim=emb_dim, attention_dim=128, num_classes=14).to(device)
     model.load_state_dict(torch.load(args.model))
     
     # Run model evaluation

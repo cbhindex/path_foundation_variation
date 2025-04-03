@@ -8,7 +8,9 @@ Created on Mon Feb  3 16:42:45 2025
 
 This script trains an attention-based multi-instance learning (MIL) model for 
 digital pathology classification. It processes whole slide images (WSIs) that 
-have been converted into patch-level 384-dimensional feature embeddings. 
+have been converted into patch-level 384-dimensional (for the Google Path 
+Foundation model) feature embeddings (other model will have other embedding dimensions).
+ 
 The script loads training and validation data from CSV files, where each slide (bag) 
 contains a variable number of patches (instances). The model uses an attention 
 mechanism to aggregate patch features into a slide-level representation for 
@@ -54,6 +56,9 @@ patience: int
     
 num_class: int
     Number of class
+    
+emb_type: str, 
+    The embedding type, select from 'h5' or 'csv'
 
 """
 
@@ -61,13 +66,15 @@ import os
 import argparse
 import time
 
+import numpy as np
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from utils.helper_class_pytorch import SlideBagDataset, AttentionMIL
-from utils.helper_functions_pytorch import collate_fn_random_sampling, load_data
+from utils.helper_functions_pytorch import collate_fn_random_sampling, load_data, load_data_h5
 
 #################### define the training loop ####################
 
@@ -206,33 +213,42 @@ if __name__ == '__main__':
     # define argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_3", 
+                        default="/media/digitalpathology/b_chai/trident_outputs/cohort_3/20x_224px_0px_overlap/features_uni_v2", 
                         help='Path to training data folder')
     parser.add_argument('--train_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_3_3dhistech.csv",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_3_aperio.csv",
                         help='Path to training label CSV')
     parser.add_argument('--val_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_1",
+                        default="/media/digitalpathology/b_chai/trident_outputs/cohort_3/20x_224px_0px_overlap/features_uni_v2",
                         help='Path to validation data folder')
     parser.add_argument('--val_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_1_val.csv", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_3_aperio.csv", 
                         help='Path to validation label CSV')
     parser.add_argument('--model_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/trained_on_14slides_3dhistech", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/uni_v2/trained_on_14slides_aperio", 
                         help='Path to saved model folder')
     parser.add_argument('--k_instances', type=int, default=500, help='Number of instances per bag')
-    parser.add_argument('--epochs', type=int, default=200, help='Number of training epochs')
+    parser.add_argument('--epochs', type=int, default=50, help='Number of training epochs')
     parser.add_argument('--lr', type=float, default=0.0005, help='Learning rate')
-    parser.add_argument('--patience', type=int, default=30, help='Number of patient epochs for early stop')
+    parser.add_argument('--patience', type=int, default=50, help='Number of patient epochs for early stop')
     parser.add_argument('--num_class', type=int, default=14, help='Number of class')
+    parser.add_argument('--emb_type', type=str, default='h5', choices=['h5', 'csv'],
+                        help='the embedding type, select from h5 or csv')
     
     args = parser.parse_args()
     
     since = time.time()
     
+    # make sure output folder exists
+    os.makedirs(f"{args.model_folder}", exist_ok=True)
+    
     # training and validation data preparation
-    train_patch_features, train_labels, _ = load_data(args.train_folder, args.train_labels)
-    val_patch_features, val_labels, _ = load_data(args.val_folder, args.val_labels)
+    if args.emb_type == 'csv':
+        train_patch_features, train_labels, _ = load_data(args.train_folder, args.train_labels)
+        val_patch_features, val_labels, _ = load_data(args.val_folder, args.val_labels)
+    elif args.emb_type == 'h5':
+        train_patch_features, train_labels, _ = load_data_h5(args.train_folder, args.train_labels)
+        val_patch_features, val_labels, _ = load_data_h5(args.val_folder, args.val_labels)
     
     train_dataset = SlideBagDataset(train_patch_features, train_labels)
     val_dataset = SlideBagDataset(val_patch_features, val_labels)
@@ -246,12 +262,12 @@ if __name__ == '__main__':
         collate_fn=lambda x: collate_fn_random_sampling(x, args.k_instances)
         )
     
-    # debug print
-    print("Data loading completed.")
+    # different foundation model have different dimensions
+    emb_dim = np.shape(val_patch_features[0])[1]
     
     # define device and model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = AttentionMIL(input_dim=384, attention_dim=128, num_classes=args.num_class)
+    model = AttentionMIL(input_dim=emb_dim, attention_dim=128, num_classes=args.num_class)
     
     # define criterion and optimizer
     criterion = nn.CrossEntropyLoss()
