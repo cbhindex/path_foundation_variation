@@ -262,29 +262,31 @@ if __name__ == '__main__':
     #     train_patch_features, train_labels, _ = load_data_h5(args.train_folder, args.train_labels)
     #     val_patch_features, val_labels, _ = load_data_h5(args.val_folder, args.val_labels)
         
-    # Initialize with primary training folder
     if args.emb_type == 'csv':
-        train_patch_features, train_labels, train_slide_ids = load_data(args.train_folder, args.train_labels)
+        train_patch_features, train_labels, train_slide_ids = [], [], []
+    
+        for all_folder in [args.train_folder, args.train_folder_2, args.train_folder_3]:
+            if all_folder:
+                features, labels, slide_ids = load_data(all_folder, args.train_labels)
+                train_patch_features += features
+                train_labels += labels
+                train_slide_ids += slide_ids
         val_patch_features, val_labels, _ = load_data(args.val_folder, args.val_labels)
     
-        # Loop through optional additional folders
-        for extra_folder in [args.train_folder_2, args.train_folder_3]:
-            if extra_folder:
-                extra_features, extra_labels, extra_slide_ids = load_data(extra_folder, args.train_labels)
-                train_patch_features += extra_features
-                train_labels += extra_labels
-                train_slide_ids += extra_slide_ids
-    
     elif args.emb_type == 'h5':
-        train_patch_features, train_labels, train_slide_ids = load_data_h5(args.train_folder, args.train_labels)
+        train_patch_features, train_labels, train_slide_ids = [], [], []
+    
+        for all_folder in [args.train_folder, args.train_folder_2, args.train_folder_3]:
+            if all_folder:
+                features, labels, slide_ids = load_data_h5(all_folder, args.train_labels)
+                train_patch_features += features
+                train_labels += labels
+                train_slide_ids += slide_ids
         val_patch_features, val_labels, _ = load_data_h5(args.val_folder, args.val_labels)
     
-        for extra_folder in [args.train_folder_2, args.train_folder_3]:
-            if extra_folder:
-                extra_features, extra_labels, extra_slide_ids = load_data_h5(extra_folder, args.train_labels)
-                train_patch_features += extra_features
-                train_labels += extra_labels
-                train_slide_ids += extra_slide_ids
+    # get train-validation size (number of slides)
+    print(f"Number of training slides: {len(train_labels)}")
+    print(f"Number of validation slides: {len(val_labels)}")
     
     train_dataset = SlideBagDataset(train_patch_features, train_labels)
     val_dataset = SlideBagDataset(val_patch_features, val_labels)
