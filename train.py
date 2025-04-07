@@ -29,6 +29,12 @@ Parameters
 ----------
 train_folder: str
     Path to training data folder.
+    
+train_folder_2: str
+    Path to second optional training data folder.
+
+train_folder_3: str
+    Path to third optional training data folder.    
 
 train_labels: str
     Path to training label CSV.
@@ -215,6 +221,12 @@ if __name__ == '__main__':
     parser.add_argument('--train_folder', type=str, 
                         default="/media/digitalpathology/b_chai/trident_outputs/cohort_3/20x_224px_0px_overlap/features_uni_v2", 
                         help='Path to training data folder')
+    parser.add_argument('--train_folder_2', type=str, 
+                        default=None,
+                        help='Second optional training data folder')
+    parser.add_argument('--train_folder_3', type=str, 
+                        default=None,
+                        help='Third optional training data folder')
     parser.add_argument('--train_labels', type=str, 
                         default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_3_aperio.csv",
                         help='Path to training label CSV')
@@ -242,13 +254,37 @@ if __name__ == '__main__':
     # make sure output folder exists
     os.makedirs(f"{args.model_folder}", exist_ok=True)
     
-    # training and validation data preparation
+    # # training and validation data preparation
+    # if args.emb_type == 'csv':
+    #     train_patch_features, train_labels, _ = load_data(args.train_folder, args.train_labels)
+    #     val_patch_features, val_labels, _ = load_data(args.val_folder, args.val_labels)
+    # elif args.emb_type == 'h5':
+    #     train_patch_features, train_labels, _ = load_data_h5(args.train_folder, args.train_labels)
+    #     val_patch_features, val_labels, _ = load_data_h5(args.val_folder, args.val_labels)
+        
+    # Initialize with primary training folder
     if args.emb_type == 'csv':
-        train_patch_features, train_labels, _ = load_data(args.train_folder, args.train_labels)
+        train_patch_features, train_labels, train_slide_ids = load_data(args.train_folder, args.train_labels)
         val_patch_features, val_labels, _ = load_data(args.val_folder, args.val_labels)
+    
+        # Loop through optional additional folders
+        for extra_folder in [args.train_folder_2, args.train_folder_3]:
+            if extra_folder:
+                extra_features, extra_labels, extra_slide_ids = load_data(extra_folder, args.train_labels)
+                train_patch_features += extra_features
+                train_labels += extra_labels
+                train_slide_ids += extra_slide_ids
+    
     elif args.emb_type == 'h5':
-        train_patch_features, train_labels, _ = load_data_h5(args.train_folder, args.train_labels)
+        train_patch_features, train_labels, train_slide_ids = load_data_h5(args.train_folder, args.train_labels)
         val_patch_features, val_labels, _ = load_data_h5(args.val_folder, args.val_labels)
+    
+        for extra_folder in [args.train_folder_2, args.train_folder_3]:
+            if extra_folder:
+                extra_features, extra_labels, extra_slide_ids = load_data_h5(extra_folder, args.train_labels)
+                train_patch_features += extra_features
+                train_labels += extra_labels
+                train_slide_ids += extra_slide_ids
     
     train_dataset = SlideBagDataset(train_patch_features, train_labels)
     val_dataset = SlideBagDataset(val_patch_features, val_labels)
