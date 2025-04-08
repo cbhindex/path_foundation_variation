@@ -240,9 +240,9 @@ if __name__ == '__main__':
                         default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/uni_v2/trained_on_14slides_aperio", 
                         help='Path to saved model folder')
     parser.add_argument('--k_instances', type=int, default=500, help='Number of instances per bag')
-    parser.add_argument('--epochs', type=int, default=50, help='Number of training epochs')
+    parser.add_argument('--epochs', type=int, default=200, help='Number of training epochs')
     parser.add_argument('--lr', type=float, default=0.0005, help='Learning rate')
-    parser.add_argument('--patience', type=int, default=50, help='Number of patient epochs for early stop')
+    parser.add_argument('--patience', type=int, default=10, help='Number of patient epochs for early stop')
     parser.add_argument('--num_class', type=int, default=14, help='Number of class')
     parser.add_argument('--emb_type', type=str, default='h5', choices=['h5', 'csv'],
                         help='the embedding type, select from h5 or csv')
