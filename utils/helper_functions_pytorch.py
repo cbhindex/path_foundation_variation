@@ -170,8 +170,8 @@ def load_data(folder_path, label_csv):
             patch_features.append(features)
             labels.append(labels_dict[case_id])
             slide_filenames.append(case_id)  # Store the case_id as slide filename
-        else:
-            print(f"Warning: {case_id}.csv not found. Skipping this case.")
+        # else:
+        #     print(f"Warning: {case_id}.csv not found. Skipping this case.")
     
     return patch_features, labels, slide_filenames
 
@@ -230,8 +230,8 @@ def load_data_h5(folder_path, label_csv):
 
             except Exception as e:
                 print(f"Error reading {case_id}.h5: {e}. Skipping this case.")
-        else:
-            print(f"Warning: {case_id}.h5 not found. Skipping this case.")
+        # else:
+        #     print(f"Warning: {case_id}.h5 not found. Skipping this case.")
 
     return patch_features, labels, slide_filenames
 
