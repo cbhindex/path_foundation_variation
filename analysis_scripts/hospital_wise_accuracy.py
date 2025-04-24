@@ -6,65 +6,84 @@ Created on Tue Feb 11 00:53:07 2025
 @author: Dr Binghao Chai
 @institute: University College London (UCL)
 
-This script calculate the hospital wise accuracy using the original metadata
-and the case-level prediction results (csv) as input.
+This script calculates hospital-wise accuracy using the original metadata
+and case-level prediction results (CSV) as input.
 
+Parameters
+----------
+csv_file: str
+    Path to the prediction results CSV file.
+    
+excel_file: str
+    PPath to the metadata Excel file.
+    
+csv_file: str
+    Path to the prediction results CSV file.
+    
+output_dir: str
+    Directory to save the output CSV files. 
+   
 """
 
 import pandas as pd
 import os
+import argparse
 
-# Load the CSV file
-csv_file_path = "/home/digitalpathology/workspace/path_foundation_stain_variation/output/cohort_4/cohort_4_individual_results.csv"
-csv_df = pd.read_csv(csv_file_path)
+# define the key function
+def calculate_hospital_accuracy(csv_file_path, excel_file_path, output_dir):
+    # Load the CSV file
+    csv_df = pd.read_csv(csv_file_path)
 
-# Load the Excel file
-excel_file_path = "/home/digitalpathology/workspace/path_foundation_stain_variation/metadata/cohort_4/external_staining_variation data_refined_BC_23JAN2025.xlsx"
-xls = pd.ExcelFile(excel_file_path)
+    # Load the Excel file and "Images" sheet
+    xls = pd.ExcelFile(excel_file_path)
+    images_df = pd.read_excel(xls, sheet_name="Images")
 
-# Load the "Images" sheet
-images_df = pd.read_excel(xls, sheet_name="Images")
+    # Extract relevant columns and clean
+    images_df = images_df[['File ID', 'Staining Institute']].dropna()
+    images_df['slide_id'] = images_df['File ID'].apply(lambda x: os.path.splitext(str(x))[0])
 
-# Extract the relevant columns and drop NaN values
-images_df = images_df[['File ID', 'Staining Institute']].dropna()
+    # Merge with prediction CSV
+    merged_df = csv_df.merge(images_df[['slide_id', 'Staining Institute']], on='slide_id', how='left')
+    merged_df.rename(columns={'Staining Institute': 'staining_institute'}, inplace=True)
+    merged_df['staining_institute'] = merged_df['staining_institute'].str.strip().str.replace(" +", " ", regex=True)
 
-# Remove file extensions from 'File ID' to match 'slide_id' in csv_df
-images_df['slide_id'] = images_df['File ID'].apply(lambda x: os.path.splitext(str(x))[0])
+    # Compute statistics per staining institute
+    staining_stats = merged_df.groupby('staining_institute').agg(
+        total_case=('slide_id', 'count'),
+        correctly_predicted_case=('top_1_correct', 'sum')
+    ).reset_index()
+    staining_stats['accuracy'] = staining_stats['correctly_predicted_case'] / staining_stats['total_case']
 
-# Merge the CSV file with images_df on 'slide_id'
-merged_df = csv_df.merge(images_df[['slide_id', 'Staining Institute']], on='slide_id', how='left')
+    # Sort the statistics
+    staining_stats_sorted = staining_stats.sort_values(
+        by=['accuracy', 'total_case', 'staining_institute'], ascending=[False, False, True]
+    )
 
-# Rename columns for clarity
-merged_df.rename(columns={'Staining Institute': 'staining_institute'}, inplace=True)
+    # Prepare output paths
+    os.makedirs(output_dir, exist_ok=True)
+    stats_output_path = os.path.join(output_dir, "staining_institute_accuracy_sorted_final.csv")
+    slide_info_output_path = os.path.join(output_dir, "slide_staining_info.csv")
 
-# Trim whitespace and standardize naming to avoid inconsistencies
-merged_df['staining_institute'] = merged_df['staining_institute'].str.strip()
-merged_df['staining_institute'] = merged_df['staining_institute'].str.replace(" +", " ", regex=True)
+    # Save outputs
+    staining_stats_sorted.to_csv(stats_output_path, index=False)
+    merged_df[['slide_id', 'top_1_correct', 'staining_institute']].to_csv(slide_info_output_path, index=False)
 
-# Compute statistics per staining institute
-staining_stats = merged_df.groupby('staining_institute').agg(
-    total_case=('slide_id', 'count'),
-    correctly_predicted_case=('top_1_correct', 'sum')
-).reset_index()
+    print("Processing complete. Files saved:")
+    print(f"1. Staining Institute Accuracy Summary (Sorted): {stats_output_path}")
+    print(f"2. Slide Staining Information: {slide_info_output_path}")
 
-# Compute accuracy
-staining_stats['accuracy'] = staining_stats['correctly_predicted_case'] / staining_stats['total_case']
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Calculate hospital-wise accuracy from prediction results and metadata.")
+    parser.add_argument('--csv_file', type=str, 
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/cohort_4/cohort_4_individual_results.csv', 
+                        help='Path to the prediction results CSV file.')
+    parser.add_argument('--excel_file', type=str, 
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/metadata/cohort_4/external_staining_variation data_refined_BC_23JAN2025.xlsx', 
+                        help='Path to the metadata Excel file.')
+    parser.add_argument('--output_dir', type=str, 
+                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/cohort_4/hospital_accuracy', 
+                        help='Directory to save the output CSV files.')
 
-# Sort the staining institute accuracy summary by accuracy (descending), total cases (descending), and alphabetically (ascending)
-staining_stats_sorted = staining_stats.sort_values(
-    by=['accuracy', 'total_case', 'staining_institute'], ascending=[False, False, True]
-)
-
-# Save the final sorted CSV file
-staining_stats_sorted_path = "/home/digitalpathology/workspace/path_foundation_stain_variation/output/cohort_4/hospital_accuracy/staining_institute_accuracy_sorted_final.csv"
-staining_stats_sorted.to_csv(staining_stats_sorted_path, index=False)
-
-# Create the second CSV file with only three columns
-filtered_df = merged_df[['slide_id', 'top_1_correct', 'staining_institute']]
-filtered_csv_path = "/home/digitalpathology/workspace/path_foundation_stain_variation/output/cohort_4/hospital_accuracy/slide_staining_info.csv"
-filtered_df.to_csv(filtered_csv_path, index=False)
-
-print("Processing complete. Files saved:")
-print(f"1. Staining Institute Accuracy Summary (Sorted): {staining_stats_sorted_path}")
-print(f"2. Slide Staining Information: {filtered_csv_path}")
-
+    args = parser.parse_args()
+    
+    calculate_hospital_accuracy(args.csv_file, args.excel_file, args.output_dir)
