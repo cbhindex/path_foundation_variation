@@ -1,52 +1,35 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Feb 10 21:40:00 2025
+Created on Thu Mar 13 12:50:18 2025
 
 @author: Dr Binghao Chai
 @institute: University College London (UCL)
 
 This script computes the slide-level embeddings using the trained model
-and then visualises the slide-level embeddings with t-SNE.
-
-Now it also adds prediction and confidence score information to the interactive t-SNE plot.
+and then visualises the slide-level embeddings with t-SNE. The interactive t-sne
+shows also the prediction and confidence score information. The t-sne plot has
+three colouring strategy, they are: dots coloured by scan_device, by staining_institute,
+and by their ground truth diagnosis.
 
 Parameters
 ----------
-test_folder: str
-    Path to validation data folder.
-    
-test_labels: str
-    Path to validation label CSV.
-
-prediction_csv: str
-    Path to prediction results CSV.
+input_csv: str
+    Path to input CSV file with embeddings and labels.
     
 output: str
     Path to output folder.
 
 """
 
-# Package Import
 import os
 import time
 import argparse
-from tqdm import tqdm
-
 import numpy as np
 import pandas as pd
-import random
-
 import plotly.express as px
 import matplotlib.pyplot as plt
-
-import torch
-from torch.utils.data import DataLoader
-
 from sklearn.manifold import TSNE
-
-from utils.helper_class_pytorch import SlideBagDataset
-from utils.helper_functions_pytorch import load_data, collate_fn_variable_size
 
 # Diagnosis mapping
 # DIAGNOSIS_MAPPING_15CLASSES = {
@@ -66,6 +49,7 @@ from utils.helper_functions_pytorch import load_data, collate_fn_variable_size
 #     14: "Solitary fibrous tumour",
 #     15: "Low grade fibromyxoid sarcoma"
 # }
+
 DIAGNOSIS_MAPPING = {
     1: "Dermatofibrosarcoma protuberans",
     2: "Neurofibroma",
@@ -83,195 +67,174 @@ DIAGNOSIS_MAPPING = {
     14: "Low grade fibromyxoid sarcoma"
 }
 
-# TODO: maybe put this function to utils?
-def extract_random_slide_embeddings(test_loader, test_slide_filenames, nr_patch=3):
-    """
-    Randomly selects `nr_patch` patches for each slide instead of using a model-based approach.
+# def generate_color_palette(unique_values):
+#     """Generate a distinct color palette for unique values, optimized for visual clarity."""
+#     num_colors = len(unique_values)
+    
+#     # Prioritize strong contrast and visually distinct colors first
+#     all_colors = (
+#         px.colors.qualitative.Bold +          # High contrast, good for few categories
+#         px.colors.qualitative.Dark2 +         # Still strong and good for up to ~12
+#         px.colors.qualitative.Set3 +          # More colorful, medium contrast
+#         px.colors.qualitative.Safe +          # Designed for accessibility
+#         px.colors.qualitative.Pastel +        # Soft backup colors
+#         px.colors.qualitative.Light24         # Large pool, lower contrast
+#     )
 
-    Parameters:
-    - test_loader (DataLoader): DataLoader containing patch-level embeddings.
-    - test_slide_filenames (list): List of slide filenames corresponding to test_loader data.
-    - nr_patch (int): Number of patches to randomly select per slide. Default is 5.
+#     # Deduplicate while preserving order
+#     seen = set()
+#     deduped_colors = []
+#     for color in all_colors:
+#         if color not in seen:
+#             deduped_colors.append(color)
+#             seen.add(color)
 
-    Returns:
-    - slide_embeddings (np.array): Randomly selected patch embeddings.
-    - slide_ids (list): Corresponding slide IDs (not unique, as each slide has `nr_patch` entries).
-    """
-    slide_embeddings = []
-    slide_ids = []
+#     # Repeat colors only if necessary, but warn if uniqueness can't be preserved
+#     if num_colors > len(deduped_colors):
+#         print(f"Warning: Not enough unique colors for {num_colors} values, some colors will repeat.")
 
-    with tqdm(total=len(test_slide_filenames), desc="Selecting Random Patches", unit="slide") as pbar:
-        for batch_idx, (batch_patches, _) in enumerate(test_loader):
-            for i, patches in enumerate(batch_patches):
-                slide_id = test_slide_filenames[batch_idx * test_loader.batch_size + i]
-                
-                # Convert to NumPy array (if it's a tensor)
-                patches_np = patches.cpu().numpy() if isinstance(patches, torch.Tensor) else patches
-                
-                # Ensure there are at least `nr_patch` samples to choose from
-                num_available_patches = patches_np.shape[0]
-                if num_available_patches < nr_patch:
-                    selected_patches = patches_np  # Take all available patches if less than `nr_patch`
-                else:
-                    selected_patches = patches_np[random.sample(range(num_available_patches), nr_patch)]
-                
-                for patch in selected_patches:
-                    slide_embeddings.append(patch)
-                    slide_ids.append(slide_id)
-                
-                pbar.update(1)
+#     colors = deduped_colors * ((num_colors // len(deduped_colors)) + 1)
+#     color_map = {str(val): colors[i] for i, val in enumerate(unique_values)}
+    
+#     return color_map
 
-    return np.array(slide_embeddings), slide_ids
+def generate_color_palette(unique_values):
+    """Generate a perceptually distinct, print-safe palette with good early contrast."""
+    num_colors = len(unique_values)
 
-# Function to perform t-SNE visualization
-def plot_tsne(embeddings, slide_ids, labels, predictions, confidences, output_path):
+    # Reordered with first N colors being maximally distinct (for scan device / diagnosis)
+    curated_palette = [
+        "#E41A1C",  # vivid red
+        "#377EB8",  # strong blue
+        "#FFD700",  # golden yellow
+
+        "#4DAF4A",  # vibrant green
+        "#984EA3",  # purple
+        "#FF7F00",  # orange
+        "#A65628",  # brown
+        "#F781BF",  # pink
+        "#999999",  # gray
+        "#66C2A5",  # teal
+        "#FC8D62",  # salmon
+        "#8DA0CB",  # steel blue
+        "#E78AC3",  # pink/magenta
+        "#A6D854",  # lime green
+
+        # Round 2 - Medium contrast
+        "#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E",
+        "#E6AB02", "#A6761D", "#666666",
+
+        # Round 3 - Tol and Okabe-Ito blends
+        "#332288", "#88CCEE", "#117733", "#DDCC77", "#CC6677",
+        "#882255", "#661100", "#999933", "#6699CC", "#44AA99",
+
+        # Final backup colors
+        "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00",
+        "#CC79A7", "#B3B3B3", "#888888", "#E5C494", "#FFD92F"
+    ]
+
+    # Deduplicate and preserve order
+    seen = set()
+    deduped_colors = []
+    for color in curated_palette:
+        if color not in seen:
+            deduped_colors.append(color)
+            seen.add(color)
+
+    if num_colors > len(deduped_colors):
+        print(f"Warning: Only {len(deduped_colors)} colors. Some will repeat for {num_colors} categories.")
+    
+    colors = deduped_colors * ((num_colors // len(deduped_colors)) + 1)
+
+    color_map = {str(val): colors[i] for i, val in enumerate(unique_values)}
+    return color_map
+
+def plot_tsne(embeddings, slide_ids, labels, predictions, confidences, staining_institutes, scan_devices, color_by, output_path):
     tsne = TSNE(n_components=2, perplexity=30, random_state=42)
     embeddings_2D = tsne.fit_transform(embeddings)
 
-    # Create DataFrame for visualization
     df_tsne = pd.DataFrame({
         'tSNE1': embeddings_2D[:, 0],
         'tSNE2': embeddings_2D[:, 1],
         'slide_id': slide_ids,
-        'Diagnosis': [DIAGNOSIS_MAPPING[label] for label in labels],
-        'Prediction': [DIAGNOSIS_MAPPING[pred] for pred in predictions],
-        'Score': [f"{conf:.6f}" for conf in confidences]  # Ensure 6 decimal places
+        # 'Diagnosis': [str(label) for label in labels],
+        'Diagnosis': [
+            DIAGNOSIS_MAPPING[int(label)] if color_by == 'subtype' else str(label) 
+            for label in labels
+            ],
+        'Prediction': predictions,
+        'Score': [f"{conf:.6f}" for conf in confidences],
+        'Staining Institute': staining_institutes,
+        'Scan Device': scan_devices
     })
 
-    # Define color palette
-    unique_labels = df_tsne['Diagnosis'].unique()
-    color_map = plt.get_cmap("tab20").colors  # Get Tab20 colormap
-    color_map = [f"rgb({int(r*255)},{int(g*255)},{int(b*255)})" for r, g, b in color_map]  # Convert to Plotly format
-    #color_map = px.colors.qualitative.Plotly
-    label_to_color = {label: color_map[i % len(color_map)] for i, label in enumerate(unique_labels)}
+    if color_by == 'staining_institute':
+        color_column = 'Staining Institute'
+    elif color_by == 'scan_device':
+        color_column = 'Scan Device'
+    else:
+        color_column = 'Diagnosis'  # Default to subtype classification
 
-    # Save interactive plot
+    if color_by == 'staining_institute':
+        unique_values = sorted(df_tsne[color_column].unique(), key=lambda x: int(x[1:]))
+    elif color_by == 'subtype':
+        inverse_mapping = {v: k for k, v in DIAGNOSIS_MAPPING.items()}
+        unique_values = sorted(df_tsne[color_column].unique(), key=lambda x: inverse_mapping[x])
+    else:
+        unique_values = sorted(df_tsne[color_column].unique())
+
+    color_map = generate_color_palette(unique_values)
+
     fig = px.scatter(
         df_tsne,
         x='tSNE1',
         y='tSNE2',
-        color=df_tsne['Diagnosis'],
+        color=df_tsne[color_column],
         hover_data=['slide_id', 'Prediction', 'Score'],
-        title="Interactive t-SNE Visualization of Slide-Level Embeddings",
-        labels={'color': 'Diagnosis'},
+        title=f"Interactive t-SNE Visualization (Color by {color_column})",
+        labels={'color': color_column},
         width=1200, height=800,
-        color_discrete_map=label_to_color
+        category_orders={color_column: unique_values},  # Maintain consistent legend order
+        color_discrete_map=color_map
     )
-    output_html = os.path.join(output_path, "tsne_visualisation_interactive.html")
+    output_html = os.path.join(output_path, f"tsne_visualisation_interactive_{color_by}.html")
     fig.write_html(output_html)
-    print(f"Interactive t-SNE visualisation saved at: {output_html}")
+    print(f"Interactive t-SNE visualization saved at: {output_html}")
 
-    # Save static plot
-    plt.figure(figsize=(12, 8))
-    
-    #colors = [label_to_color[label] for label in df_tsne['Diagnosis']]
-    tab20_cmap = plt.get_cmap("tab20")
-    unique_labels_list = list(unique_labels)
-    label_to_color_static = {label: tab20_cmap(i / max(1, len(unique_labels_list)-1)) for i, label in enumerate(unique_labels_list)}
-    colors = [label_to_color_static[label] for label in df_tsne['Diagnosis']]
-    
-    plt.scatter(df_tsne['tSNE1'], df_tsne['tSNE2'], c=colors, s=30, alpha=0.9)
-
-    plt.xlabel("t-SNE Feature 1")
-    plt.ylabel("t-SNE Feature 2")
-    plt.title("t-SNE Visualisation of Slide-Level Embeddings")
-
-    plt.tight_layout()
-    output_png = os.path.join(output_path, "tsne_visualisation.png")
-    plt.savefig(output_png)
-    print(f"Static t-SNE plot saved at: {output_png}")
-
-# Main function
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('--test_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/new_cohort_2",
-                        help='Path to validation data folder')
-    parser.add_argument('--test_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/new_cohort_2.csv", 
-                        help='Path to validation label CSV')
-    parser.add_argument('--prediction_csv', type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/trained_without_variation/new_cohort_2/new_cohort_2_individual_results.csv', 
-                        help='Path to prediction results CSV')
+    parser.add_argument('--input_csv', type=str, 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/tsne_plots/cohort_2/cohort_2_path_foundation.csv",
+                        help='Path to input CSV file with embeddings and labels')
     parser.add_argument('--output', type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/cohort_2', 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/tsne_plots/cohort_2",
                         help='Path to output folder')
 
     args = parser.parse_args()
-    
+
     since = time.time()
     os.makedirs(args.output, exist_ok=True)
 
-    # Load test data
-    test_patch_features, test_labels, test_slide_filenames = load_data(args.test_folder, args.test_labels)
-    test_dataset = SlideBagDataset(test_patch_features, test_labels)
-    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, collate_fn=collate_fn_variable_size)
+    df = pd.read_csv(args.input_csv)
+    embeddings = df.iloc[:, 4:-2].values  # Assuming embeddings are all columns after the first four and before last two columns
+    slide_ids = df.iloc[:, 0].tolist()
+    labels = [str(label) for label in df['ground_truth'].tolist()]  # Ensure categorical labels
+    predictions = df['prediction'].tolist()
+    confidences = df['confidence_score'].tolist()
+    staining_institutes = df['staining_institute'].tolist()
+    scan_devices = df['scan_device'].tolist()
 
-    print("Data loading completed.")
-
-    # Extract slide-level embeddings
-    embeddings, slide_ids = extract_random_slide_embeddings(test_loader, test_slide_filenames, nr_patch=3)
-
-    # Load labels
-    labels_df = pd.read_csv(args.test_labels)
-    label_dict = dict(zip(labels_df['case_id'], labels_df['ground_truth']))
-
-    # Load predictions
-    predictions_df = pd.read_csv(args.prediction_csv)
-    predictions_dict = dict(zip(predictions_df['slide_id'], predictions_df['top_1_pred']))
-    confidence_dict = dict(zip(predictions_df['slide_id'], predictions_df['top_1_prob']))
-
-    # Assign ground truth labels, predictions, and confidence scores
-    ground_truths = [label_dict.get(slide_id, "Unknown") for slide_id in slide_ids]
-    predictions = [predictions_dict.get(slide_id, "Unknown") for slide_id in slide_ids]
-    confidences = [confidence_dict.get(slide_id, 0.0) for slide_id in slide_ids]
-
-    # Save embeddings to CSV
-    df_embeddings = pd.DataFrame(embeddings, index=slide_ids)
-    df_embeddings.insert(0, 'ground_truth', ground_truths)
-    df_embeddings.insert(1, 'prediction', predictions)
-    df_embeddings.insert(2, 'confidence_score', confidences)
-    df_embeddings.to_csv(os.path.join(args.output, "slide_embeddings_with_labels.csv"))
-
-    # Generate t-SNE visualization
-    plot_tsne(embeddings, slide_ids, ground_truths, predictions, confidences, args.output)
+    plot_tsne(
+        embeddings, slide_ids, labels, predictions, confidences, 
+        staining_institutes, scan_devices, 'subtype', args.output)
+    plot_tsne(
+        embeddings, slide_ids, labels, predictions, confidences, 
+        staining_institutes, scan_devices, 'scan_device', args.output)
+    plot_tsne(
+        embeddings, slide_ids, labels, predictions, confidences, 
+        staining_institutes, scan_devices, 'staining_institute', args.output)
     
-    ########## below JavaScript code is provided by Jianan Chen for improve user experience ##########
-    
-    # Read the existing HTML file
-    with open(os.path.join(args.output, "tsne_visualisation_interactive.html"), "r", encoding="utf-8") as f:
-        html_content = f.read()
-    
-    # JavaScript code
-    js_code = """
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var plot = document.getElementsByClassName('plotly-graph-div')[0];
-    
-        plot.on('plotly_click', function(data) {
-            if (data.points.length > 0) {
-                var filename = data.points[0].customdata[0]; 
-                navigator.clipboard.writeText(filename).then(function() {
-                    alert("Copied to clipboard: " + filename);
-                }).catch(function(err) {
-                    console.error("Failed to copy: ", err);
-                });
-            }
-        });
-    });
-    </script>
-    """
-    
-    # Insert the JavaScript code before </body>
-    html_content = html_content.replace("</body>", js_code + "\n</body>")
-    
-    # Save the modified HTML
-    with open(os.path.join(args.output, "tsne_visualisation_interactive.html"), "w", encoding="utf-8") as f:
-        f.write(html_content)
-    
-    print("Embedding extraction and visualisation completed.")
-
     # Print the total runtime
     time_elapsed = time.time() - since
     print("Task complete in {:.0f}m {:.0f}s".format(time_elapsed // 60, time_elapsed % 60))
+    
