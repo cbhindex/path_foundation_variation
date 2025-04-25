@@ -28,6 +28,7 @@ import argparse
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.io as pio
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 
@@ -191,20 +192,64 @@ def plot_tsne(embeddings, slide_ids, labels, predictions, confidences, staining_
         y='tSNE2',
         color=df_tsne[color_column],
         hover_data=['slide_id', 'Prediction', 'Score'],
-        title=f"Interactive t-SNE Visualization (Color by {color_column})",
+        # title=f"Interactive t-SNE Visualization (Color by {color_column})",
         labels={'color': color_column},
         width=1200, height=800,
         category_orders={color_column: unique_values},  # Maintain consistent legend order
         color_discrete_map=color_map
     )
+    
+    # Generate div with CDN JS, not full HTML
+    plot_div = pio.to_html(fig, include_plotlyjs='cdn', full_html=False)
+
+    # Add the custom JavaScript for click-to-copy
+    js_code = """
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var plot = document.getElementsByClassName('plotly-graph-div')[0];
+
+        plot.on('plotly_click', function(data) {
+            if (data.points.length > 0) {
+                var filename = data.points[0].customdata[0]; 
+                navigator.clipboard.writeText(filename).then(function() {
+                    alert("Copied to clipboard: " + filename);
+                }).catch(function(err) {
+                    console.error("Failed to copy: ", err);
+                });
+            }
+        });
+    });
+    </script>
+    """
+    # Wrap everything into a complete HTML page
+    full_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>t-SNE Visualization</title>
+    </head>
+    <body>
+        {plot_div}
+        {js_code}
+    </body>
+    </html>
+    """
     output_html = os.path.join(output_path, f"tsne_visualisation_interactive_{color_by}.html")
-    fig.write_html(output_html)
+    with open(output_html, "w", encoding="utf-8") as f:
+        f.write(full_html)
+
     print(f"Interactive t-SNE visualization saved at: {output_html}")
+    
+    # Save static PDF version
+    pdf_output = os.path.join(output_path, f"tsne_visualisation_static_{color_by}.pdf")
+    fig.write_image(pdf_output, format="pdf", width=1200, height=800)
+    print(f"Static t-SNE PDF saved at: {pdf_output}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_csv', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/tsne_plots/cohort_2/cohort_2_path_foundation.csv",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation_scripts/tsne_source/cohort_2_path_foundation.csv",
                         help='Path to input CSV file with embeddings and labels')
     parser.add_argument('--output', type=str, 
                         default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/tsne_plots/cohort_2",
