@@ -97,8 +97,8 @@ def standardize_filenames(folder_path, spreadsheet_path):
         print("All file_id entries in spreadsheet matched a file in the folder.")
 
 standardize_filenames(
-    "/media/digitalpathology/b_chai/trident_outputs/scan_exp_hamamatsu_cleaned/20x_224px_0px_overlap/features_uni_v2", 
-    "/home/digitalpathology/workspace/Scanning_variation_BC.xlsx"
+    "/media/digitalpathology/b_chai/trident_outputs/scan_exp_aperio_synovial_sarcoma_cleaned/20x_512px_0px_overlap/slide_features_titan", 
+    "/home/digitalpathology/workspace/Scanning_variation_BC_discrepancy.xlsx"
     )
 
 
