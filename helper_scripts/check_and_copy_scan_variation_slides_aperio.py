@@ -101,8 +101,8 @@ def copy_matched_files_to_output(folder_path, spreadsheet_path, output_path):
 
 # Then copy matched files
 copy_matched_files_to_output(
-    "/media/digitalpathology/b_chai/trident_outputs/cohort_1/20x_224px_0px_overlap/features_resnet50",
+    "/home/digitalpathology/Desktop/RDS/digital_pathology/embeddings/stain_variation/TITAN/cohort1/20x_512px_0px_overlap/slide_features_titan",
     "/home/digitalpathology/workspace/Scanning_variation_BC_discrepancy.xlsx",
-    "/media/digitalpathology/b_chai/trident_outputs/scan_exp_embeddings_all_in_one/aperio/resnet50"
+    "/media/digitalpathology/b_chai/trident_outputs/scan_exp_embeddings_all_in_one/aperio/titan"
 )
 
