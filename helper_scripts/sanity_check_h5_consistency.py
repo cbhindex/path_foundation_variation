@@ -52,5 +52,5 @@ def check_h5_structure_consistency(folder_path):
 
 # Example usage
 if __name__ == '__main__':
-    folder = '/media/digitalpathology/b_chai/trident_outputs/scan_exp_embeddings_all_in_one/hamamatsu/titan'  # <- replace with your actual path
+    folder = '/media/digitalpathology/b_chai/trident_outputs/scan_exp_embeddings_all_in_one/3dhistech/resnet50'  # <- replace with your actual path
     check_h5_structure_consistency(folder)

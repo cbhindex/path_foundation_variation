@@ -21,7 +21,7 @@ import os
 import pandas as pd
 
 # ==== User Input ====
-folder_path = '/media/digitalpathology/b_chai/trident_outputs/scan_exp_embeddings_all_in_one/hamamatsu/titan'  # Replace with the actual folder path
+folder_path = '/media/digitalpathology/b_chai/trident_outputs/scan_exp_embeddings_all_in_one/3dhistech/uni_v2'  # Replace with the actual folder path
 csv_path = '/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/scan_exp/scan_exp_8_slides.csv'   # Replace with the actual CSV file path
 # =====================
 
