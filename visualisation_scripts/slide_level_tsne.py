@@ -150,7 +150,103 @@ def generate_color_palette(unique_values):
     color_map = {str(val): colors[i] for i, val in enumerate(unique_values)}
     return color_map
 
-def plot_tsne(embeddings, slide_ids, labels, predictions, confidences, staining_institutes, scan_devices, color_by, output_path):
+# def plot_tsne(embeddings, slide_ids, labels, predictions, confidences, staining_institutes, scan_devices, color_by, output_path):
+#     tsne = TSNE(n_components=2, perplexity=30, random_state=42)
+#     embeddings_2D = tsne.fit_transform(embeddings)
+
+#     df_tsne = pd.DataFrame({
+#         'tSNE1': embeddings_2D[:, 0],
+#         'tSNE2': embeddings_2D[:, 1],
+#         'slide_id': slide_ids,
+#         # 'Diagnosis': [str(label) for label in labels],
+#         'Diagnosis': [
+#             DIAGNOSIS_MAPPING[int(label)] if color_by == 'subtype' else str(label) 
+#             for label in labels
+#             ],
+#         'Prediction': predictions,
+#         'Score': [f"{conf:.6f}" for conf in confidences],
+#         'Staining Institute': staining_institutes,
+#         'Scan Device': scan_devices
+#     })
+
+#     if color_by == 'staining_institute':
+#         color_column = 'Staining Institute'
+#     elif color_by == 'scan_device':
+#         color_column = 'Scan Device'
+#     else:
+#         color_column = 'Diagnosis'  # Default to subtype classification
+
+#     if color_by == 'staining_institute':
+#         unique_values = sorted(df_tsne[color_column].unique(), key=lambda x: int(x[1:]))
+#     elif color_by == 'subtype':
+#         inverse_mapping = {v: k for k, v in DIAGNOSIS_MAPPING.items()}
+#         unique_values = sorted(df_tsne[color_column].unique(), key=lambda x: inverse_mapping[x])
+#     else:
+#         unique_values = sorted(df_tsne[color_column].unique())
+
+#     color_map = generate_color_palette(unique_values)
+
+#     fig = px.scatter(
+#         df_tsne,
+#         x='tSNE1',
+#         y='tSNE2',
+#         color=df_tsne[color_column],
+#         hover_data=['slide_id', 'Prediction', 'Score'],
+#         # title=f"Interactive t-SNE Visualization (Color by {color_column})",
+#         labels={'color': color_column},
+#         width=1200, height=800,
+#         category_orders={color_column: unique_values},  # Maintain consistent legend order
+#         color_discrete_map=color_map
+#     )
+    
+#     # Generate div with CDN JS, not full HTML
+#     plot_div = pio.to_html(fig, include_plotlyjs='cdn', full_html=False)
+
+#     # Add the custom JavaScript for click-to-copy
+#     js_code = """
+#     <script>
+#     document.addEventListener('DOMContentLoaded', function() {
+#         var plot = document.getElementsByClassName('plotly-graph-div')[0];
+
+#         plot.on('plotly_click', function(data) {
+#             if (data.points.length > 0) {
+#                 var filename = data.points[0].customdata[0]; 
+#                 navigator.clipboard.writeText(filename).then(function() {
+#                     alert("Copied to clipboard: " + filename);
+#                 }).catch(function(err) {
+#                     console.error("Failed to copy: ", err);
+#                 });
+#             }
+#         });
+#     });
+#     </script>
+#     """
+#     # Wrap everything into a complete HTML page
+#     full_html = f"""
+#     <!DOCTYPE html>
+#     <html>
+#     <head>
+#         <meta charset="utf-8">
+#         <title>t-SNE Visualization</title>
+#     </head>
+#     <body>
+#         {plot_div}
+#         {js_code}
+#     </body>
+#     </html>
+#     """
+#     output_html = os.path.join(output_path, f"tsne_visualisation_interactive_{color_by}.html")
+#     with open(output_html, "w", encoding="utf-8") as f:
+#         f.write(full_html)
+
+#     print(f"Interactive t-SNE visualization saved at: {output_html}")
+    
+#     # Save static PDF version
+#     pdf_output = os.path.join(output_path, f"tsne_visualisation_static_{color_by}.pdf")
+#     fig.write_image(pdf_output, format="pdf", width=1200, height=800)
+#     print(f"Static t-SNE PDF saved at: {pdf_output}")
+
+def plot_tsne(embeddings, slide_ids, labels, staining_institutes, scan_devices, color_by, output_path):
     tsne = TSNE(n_components=2, perplexity=30, random_state=42)
     embeddings_2D = tsne.fit_transform(embeddings)
 
@@ -163,8 +259,6 @@ def plot_tsne(embeddings, slide_ids, labels, predictions, confidences, staining_
             DIAGNOSIS_MAPPING[int(label)] if color_by == 'subtype' else str(label) 
             for label in labels
             ],
-        'Prediction': predictions,
-        'Score': [f"{conf:.6f}" for conf in confidences],
         'Staining Institute': staining_institutes,
         'Scan Device': scan_devices
     })
@@ -191,7 +285,7 @@ def plot_tsne(embeddings, slide_ids, labels, predictions, confidences, staining_
         x='tSNE1',
         y='tSNE2',
         color=df_tsne[color_column],
-        hover_data=['slide_id', 'Prediction', 'Score'],
+        hover_data=['slide_id'],
         # title=f"Interactive t-SNE Visualization (Color by {color_column})",
         labels={'color': color_column},
         width=1200, height=800,
@@ -252,7 +346,7 @@ if __name__ == '__main__':
                         default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation_scripts/tsne_source/cohort_2_path_foundation.csv",
                         help='Path to input CSV file with embeddings and labels')
     parser.add_argument('--output', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/tsne_plots/cohort_2",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/tsne_plots/cohort_2_path_foundation",
                         help='Path to output folder')
 
     args = parser.parse_args()
@@ -264,20 +358,15 @@ if __name__ == '__main__':
     embeddings = df.iloc[:, 4:-2].values  # Assuming embeddings are all columns after the first four and before last two columns
     slide_ids = df.iloc[:, 0].tolist()
     labels = [str(label) for label in df['ground_truth'].tolist()]  # Ensure categorical labels
-    predictions = df['prediction'].tolist()
-    confidences = df['confidence_score'].tolist()
     staining_institutes = df['staining_institute'].tolist()
     scan_devices = df['scan_device'].tolist()
 
     plot_tsne(
-        embeddings, slide_ids, labels, predictions, confidences, 
-        staining_institutes, scan_devices, 'subtype', args.output)
+        embeddings, slide_ids, labels, staining_institutes, scan_devices, 'subtype', args.output)
     plot_tsne(
-        embeddings, slide_ids, labels, predictions, confidences, 
-        staining_institutes, scan_devices, 'scan_device', args.output)
+        embeddings, slide_ids, labels, staining_institutes, scan_devices, 'scan_device', args.output)
     plot_tsne(
-        embeddings, slide_ids, labels, predictions, confidences, 
-        staining_institutes, scan_devices, 'staining_institute', args.output)
+        embeddings, slide_ids, labels, staining_institutes, scan_devices, 'staining_institute', args.output)
     
     # Print the total runtime
     time_elapsed = time.time() - since
