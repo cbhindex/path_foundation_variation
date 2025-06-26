@@ -95,7 +95,8 @@ if __name__ == '__main__':
     )
     
     # Save interactive HTML and static figure
-    fig.write_html(f"{args.output}/interactive_radar_plot.html")
+    # fig.write_html(f"{args.output}/interactive_radar_plot.h1tml")
+    fig.write_html(f"{args.output}/interactive_radar_plot.html", include_mathjax=False)
     fig.write_image(f"{args.output}/interactive_radar_plot.pdf", width=800, height=600)
     
     # Print the total runtime

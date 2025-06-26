@@ -343,10 +343,10 @@ def plot_tsne(embeddings, slide_ids, labels, staining_institutes, scan_devices, 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_csv', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation_scripts/tsne_source/cohort_2_path_foundation.csv",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation_scripts/tsne_source/titan/cohort_2_titan.csv",
                         help='Path to input CSV file with embeddings and labels')
     parser.add_argument('--output', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/tsne_plots/cohort_2_path_foundation",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/tsne_plots/cohort_2_titan",
                         help='Path to output folder')
 
     args = parser.parse_args()
@@ -355,7 +355,7 @@ if __name__ == '__main__':
     os.makedirs(args.output, exist_ok=True)
 
     df = pd.read_csv(args.input_csv)
-    embeddings = df.iloc[:, 4:-2].values  # Assuming embeddings are all columns after the first four and before last two columns
+    embeddings = df.iloc[:, 4:].values  # Assuming embeddings are all columns after the first four and before last two columns
     slide_ids = df.iloc[:, 0].tolist()
     labels = [str(label) for label in df['ground_truth'].tolist()]  # Ensure categorical labels
     staining_institutes = df['staining_institute'].tolist()
