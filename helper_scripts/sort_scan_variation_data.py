@@ -97,8 +97,8 @@ def standardize_filenames(folder_path, spreadsheet_path):
         print("All file_id entries in spreadsheet matched a file in the folder.")
 
 standardize_filenames(
-    "/home/digitalpathology/workspace/temp", 
-    "/home/digitalpathology/workspace/Scanning_variation_BC_discrepancy.xlsx"
+    "/home/digitalpathology/temp", 
+    "/home/digitalpathology/workspace/path_foundation_stain_variation/metadata/scan_exp/Scanning_variation_BC_discrepancy.xlsx"
     )
 
 
