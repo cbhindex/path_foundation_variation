@@ -48,10 +48,10 @@ if __name__ == '__main__':
     # define argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation_scripts/radar_plot_source/cohort_4_trained_with_cohort_1_7models.csv", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation_scripts/radar_plot_source/cohort_1_trained_with_cohort_1_7models.csv", 
                         help='Path to input csv file')
     parser.add_argument('--output', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/radar_plots/trained_on_cohort_1_7models/cohort_4",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/radar_plots/trained_on_cohort_1_7models_newlayout/cohort_1",
                         help='Path to output folder')
     
     args = parser.parse_args()
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     
     for i, model in enumerate(models):
         r_values = df[model].tolist() + [df[model].tolist()[0]]
-        rgba_fill = hex_to_rgba(custom_colors[i], 0.2)
+        rgba_fill = hex_to_rgba(custom_colors[i], 0.1)
         fig.add_trace(go.Scatterpolar(
             r=r_values,
             theta=theta,
@@ -88,16 +88,20 @@ if __name__ == '__main__':
     # Layout
     fig.update_layout(
         polar=dict(
-            radialaxis=dict(visible=True, range=[0, 1])
+            radialaxis=dict(visible=True, range=[0, 1]),
+            angularaxis=dict(tickfont=dict(size=20)),
         ),
-        showlegend=True,
+        # define if legend is kept
+        # showlegend=True,
+        showlegend=False, 
         # title="Subtype-level Accuracy Across Models"
+        margin=dict(l=20, r=20, t=30, b=30)  # Tighten left/right/top/bottom margins
     )
     
     # Save interactive HTML and static figure
     # fig.write_html(f"{args.output}/interactive_radar_plot.h1tml")
-    fig.write_html(f"{args.output}/interactive_radar_plot.html", include_mathjax=False)
-    fig.write_image(f"{args.output}/interactive_radar_plot.pdf", width=800, height=600)
+    fig.write_html(f"{args.output}/interactive_radar_plot.html", include_mathjax='cdn')
+    fig.write_image(f"{args.output}/interactive_radar_plot.pdf", width=1000, height=600)
     
     # Print the total runtime
     time_elapsed = time.time() - since
