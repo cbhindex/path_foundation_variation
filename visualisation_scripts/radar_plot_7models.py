@@ -48,10 +48,10 @@ if __name__ == '__main__':
     # define argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation_scripts/radar_plot_source/cohort_1_trained_with_cohort_1_7models.csv", 
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation_scripts/radar_plot_source/cohort_4_trained_with_cohort_1_7models.csv", 
                         help='Path to input csv file')
     parser.add_argument('--output', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/radar_plots/trained_on_cohort_1_7models_newlayout/cohort_1",
+                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/radar_plots/trained_on_cohort_1_7models_newlayout/cohort_4",
                         help='Path to output folder')
     
     args = parser.parse_args()

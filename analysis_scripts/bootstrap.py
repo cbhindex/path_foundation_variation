@@ -23,7 +23,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "--csv_path", 
         type=str, 
-        default="/home/digitalpathology/workspace/path_foundation_stain_variation/output/scan_exp/3dhistech/resnet50/8_slides/cohort_1/cohort_1_individual_results.csv", 
+        default="/home/digitalpathology/workspace/path_foundation_stain_variation/output/temp_cohort_1.csv", 
         help="Path to the CSV result file."
         )
     parser.add_argument(
