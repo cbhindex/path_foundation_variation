@@ -71,11 +71,31 @@ python extract_embedding.py --wsi_path /path/to/wsi_folder --tile_path /path/to/
 > - `gpu` *(int)* — CUDA device index.
 > - `mag` *(int)* — Desired magnification (e.g., `20` for 20×).
 > - `custom_list_of_wsis` *(str)* — Optional CSV with header `wsi` and rows like `XXX.svs` to **filter** which slides to process.
-
-**Example Usage**
-```bash
-python trident_with_normalisation.py --wsi_dir /path/to/wsis --coords_dir /path/to/coords --out_dir /path/to/output --target_img_path /path/to/target_image.tif --encoder_name uni_v2 --norm_method macenko --batch_size 128 --gpu 0 --mag 20 --custom_list_of_wsis /path/to/wsi_list.csv
-```
+> **Environment Installation for `trident_with_normalisation.py`**
+> - Step 1: install `torch-staintools` and `cupy`
+> ```bash
+> pip install torch-staintools
+> pip install cupy-cuda12x
+> ```
+> - Step 2: make the LD_LIBRARY_PATH presistent seen to cupy
+> ``` bash
+> mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+> cat > $CONDA_PREFIX/etc/conda/activate.d/env_nvrtc.sh <<'SH'
+> export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(python - <<'PY'
+> import os, nvidia.cuda_nvrtc as m
+> print(os.path.join(os.path.dirname(m.__file__), "lib"))
+> PY
+> )"
+> SH
+> ```
+> -Step 3: install cucim
+> ``` bash
+> pip install cucim
+> ```
+> **Example Usage**
+> ```bash
+> python trident_with_normalisation.py --wsi_dir /path/to/wsis --coords_dir /path/to/coords --out_dir /path/to/output --target_img_path /path/to/target_image.tif --encoder_name uni_v2 --norm_method macenko --batch_size 128 --gpu 0 --mag 20 --custom_list_of_wsis /path/to/wsi_list.csv
+> ```
 
 ---
 
