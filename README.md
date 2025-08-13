@@ -152,7 +152,7 @@ python test.py --test_folder /path/to/test_data --test_labels /path/to/test_labe
 
 
 ## Useful Links
-- **Trident*: https://github.com/mahmoodlab/TRIDENT/
+- **Trident**: https://github.com/mahmoodlab/TRIDENT/
 - **cuCIM**: https://github.com/rapidsai/cucim
 - **torch-staintools**: https://github.com/CielAl/torch-staintools
 
