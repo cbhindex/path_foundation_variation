@@ -60,6 +60,7 @@ python extract_embedding.py --wsi_path /path/to/wsi_folder --tile_path /path/to/
 ```
 
 > We offer an optional setting by applying **colour normalisation** before tile-level embedding extraction with **Trident** using `trident_with_normalisation.py`. This script works as a bridge without modifying **Trident** itself, **cuCIM** and **torch-staintools** are used so this script is fully GPU-accelerated without the I/O bottleneck.
+> 
 > **Parameters**
 > - `wsi_dir` *(str)* — Directory containing WSIs.
 > - `coords_dir` *(str)* — Directory of `*_patches.h5` coordinate files.
@@ -71,13 +72,16 @@ python extract_embedding.py --wsi_path /path/to/wsi_folder --tile_path /path/to/
 > - `gpu` *(int)* — CUDA device index.
 > - `mag` *(int)* — Desired magnification (e.g., `20` for 20×).
 > - `custom_list_of_wsis` *(str)* — Optional CSV with header `wsi` and rows like `XXX.svs` to **filter** which slides to process.
+> 
 > **Environment Installation for `trident_with_normalisation.py`**
-> - Step 1: install `torch-staintools` and `cupy`
+> 
+> Step 1: install `torch-staintools` and `cupy`
 > ```bash
 > pip install torch-staintools
 > pip install cupy-cuda12x
 > ```
-> - Step 2: make the LD_LIBRARY_PATH presistent seen to cupy
+> 
+> Step 2: make the LD_LIBRARY_PATH presistent seen to cupy
 > ``` bash
 > mkdir -p $CONDA_PREFIX/etc/conda/activate.d
 > cat > $CONDA_PREFIX/etc/conda/activate.d/env_nvrtc.sh <<'SH'
@@ -88,7 +92,8 @@ python extract_embedding.py --wsi_path /path/to/wsi_folder --tile_path /path/to/
 > )"
 > SH
 > ```
-> -Step 3: install cucim
+> 
+> Step 3: install cucim
 > ``` bash
 > pip install cucim
 > ```
