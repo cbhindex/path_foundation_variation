@@ -21,15 +21,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Bootstrap Top-1 and Top-3 accuracy with confidence intervals.")
     
     parser.add_argument(
-        "--csv_path", 
-        type=str, 
-        default="/home/digitalpathology/workspace/path_foundation_stain_variation/output/temp_cohort_1.csv", 
+        "--csv_path", type=str, 
         help="Path to the CSV result file."
         )
     parser.add_argument(
-        "--n_bootstrap", 
-        type=int, 
-        default=1000, 
+        "--n_bootstrap", type=int, default=1000, 
         help="Number of bootstrap resamples."
         )
     

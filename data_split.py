@@ -75,8 +75,7 @@ def split_data(source_csv, train_size, val_size, test_size):
 if __name__ == "__main__":
     # define argument parser
     parser = argparse.ArgumentParser(description="Train-validation-test split for dataset.")
-    parser.add_argument("--source_csv", type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels/cohort_1.csv",
+    parser.add_argument("--source_csv", type=str, required=True,
                         help="Path to the input CSV file containing case IDs and ground truths.")
     parser.add_argument("--train_size", type=int, default=60,
                         help="Percentage of training size (0-100).")
@@ -84,8 +83,7 @@ if __name__ == "__main__":
                         help="Percentage of validation size (0-100).")
     parser.add_argument("--test_size", type=int, default=20,
                         help="Percentage of testing size (0-100).")
-    parser.add_argument("--output_folder", type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels",
+    parser.add_argument("--output_folder", type=str, required=True,
                         help="Path to the output folder where split files will be stored.")
     
     args = parser.parse_args()
