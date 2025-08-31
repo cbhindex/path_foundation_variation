@@ -163,7 +163,7 @@ python test.py --test_folder /path/to/test_data --test_labels /path/to/test_labe
 If you use this repository or code in your research, please cite
 ```
 @article{chai2025impact,
-  title={Impact of variation in tissue staining and scanning devices on performance of pan-cancer AI models: a study of sarcoma and their mimics},
+  title={Impact of tissue staining and scanner variation on the performance of pathology foundation models: a study of sarcomas and their mimics},
   author={Chai, Binghao and Chen, Jianan and Cool, Paul and Oumlil, Fatine and Tollitt, Anna and Steiner, David F and Chakraborti, Tapabrata and Flanagan, Adrienne M},
   journal={bioRxiv},
   pages={2025--08},
