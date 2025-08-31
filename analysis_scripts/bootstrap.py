@@ -3,7 +3,25 @@
 """
 Created on Wed Jul 16 22:09:50 2025
 
-@author: digitalpathology
+@author: Dr Binghao Chai
+@institute: University College London (UCL)
+
+This script computes Top-1 and Top-3 classification accuracies with bootstrap 
+confidence intervals from a CSV results file, for the tile-level encoders. The CSV 
+should contain binary columns top_1_correct and top_3_correct indicating whether 
+each prediction was correct. The script performs bootstrap resampling 
+(default: 1000 iterations) to estimate 95% confidence intervals for both metrics. 
+Results are printed to the console and saved as a CSV in the script directory, 
+containing the mean accuracy, lower/upper CI bounds, and bootstrap settings.
+
+Parameters
+----------
+csv_path: str
+    Path to the CSV result file.
+    
+n_bootstrap: int
+    Number of bootstrap resamples, default is set to 1000.
+
 """
 
 import pandas as pd
@@ -17,11 +35,9 @@ def compute_ci(values, alpha=0.05):
     return lower, upper
 
 if __name__ == '__main__':
-    
     parser = argparse.ArgumentParser(description="Bootstrap Top-1 and Top-3 accuracy with confidence intervals.")
-    
     parser.add_argument(
-        "--csv_path", type=str, 
+        "--csv_path", type=str, required=True,
         help="Path to the CSV result file."
         )
     parser.add_argument(

@@ -71,4 +71,3 @@ class AttentionMIL_EmbeddingExtractor(AttentionMIL):
             slide_representation = torch.sum(attention_weights * x, dim=0)  # Slide embedding
         return slide_representation
     
-    

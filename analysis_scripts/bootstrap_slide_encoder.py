@@ -3,7 +3,25 @@
 """
 Created on Wed Jul 16 22:51:28 2025
 
-@author: digitalpathology
+@author: Dr Binghao Chai
+@institute: University College London (UCL)
+
+This script computes Top-1 and Top-3 classification accuracies with bootstrap 
+confidence intervals from a CSV results file, for the slide-level encoders. The 
+CSV should contain binary columns top_1_correct and top_3_correct indicating 
+whether each prediction was correct. The script performs bootstrap resampling 
+(default: 1000 iterations) to estimate 95% confidence intervals for both metrics. 
+Results are printed to the console and saved as a CSV in the script directory, 
+containing the mean accuracy, lower/upper CI bounds, and bootstrap settings.
+
+Parameters
+----------
+csv_path: str
+    Path to the CSV result file.
+    
+n_bootstrap: int
+    Number of bootstrap resamples, default is set to 1000.
+    
 """
 
 import pandas as pd
@@ -16,18 +34,14 @@ def compute_ci(values, alpha=0.05):
     upper = np.percentile(values, 100 * (1 - alpha / 2))
     return lower, upper
 
-def main():
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Bootstrap Top-1 and Top-3 accuracy for prediction CSV with different headers.")
     parser.add_argument(
-        "--csv_path", 
-        type=str, 
-        default="/home/digitalpathology/workspace/path_foundation_stain_variation/prism/scan_exp/output/3dhistech_8_slides/top3_predictions.csv", 
+        "--csv_path", type=str, required=True,
         help="Path to the CSV result file."
         )
     parser.add_argument(
-        "--n_bootstrap", 
-        type=int, 
-        default=1000, 
+        "--n_bootstrap", type=int, default=1000, 
         help="Number of bootstrap resamples."
         )
     
@@ -76,6 +90,3 @@ def main():
     output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bootstrap_accuracy_results.csv")
     result_df.to_csv(output_path, index=False)
     print(f"\nSaved results to: {output_path}")
-
-if __name__ == "__main__":
-    main()

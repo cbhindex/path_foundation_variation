@@ -220,21 +220,17 @@ diagnosis_mapping = {
 if __name__ == '__main__':
     # define argument parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/embeddings/cohort_4",
+    parser.add_argument('--test_folder', type=str, required=True,
                         help='Path to validation data folder')
-    parser.add_argument('--test_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_4_aperio_2april2025.csv", 
+    parser.add_argument('--test_labels', type=str, required=True,
                         help='Path to validation label CSV')
-    parser.add_argument('--model', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/path_foundation/trained_on_cohort_1_train/mil_best_model_state_dict_epoch_39.pth", 
+    parser.add_argument('--model', type=str, required=True,
                         help='Path to saved model')
-    parser.add_argument('--output', type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/path_foundation/trained_on_cohort_1_train', 
+    parser.add_argument('--output', type=str, required=True,
                         help='Path to output folder')
-    parser.add_argument('--emb_type', type=str, default='csv', choices=['h5', 'csv'],
+    parser.add_argument('--emb_type', type=str, default='h5', choices=['h5', 'csv'],
                         help='the embedding type, select from h5 or csv')
-    parser.add_argument('--cohort', type=str, default='cohort_4_aperio_2april2025', 
+    parser.add_argument('--cohort', type=str, required=True,
                         help='text input for output folder')
 
     args = parser.parse_args()

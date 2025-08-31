@@ -218,26 +218,19 @@ def train_model(
 if __name__ == '__main__':
     # define argument parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--train_folder', type=str, 
-                        default="/media/digitalpathology/b_chai/trident_outputs/cohort_3/20x_224px_0px_overlap/features_uni_v2", 
+    parser.add_argument('--train_folder', type=str, required=True,
                         help='Path to training data folder')
-    parser.add_argument('--train_folder_2', type=str, 
-                        default=None,
+    parser.add_argument('--train_folder_2', type=str, default=None,
                         help='Second optional training data folder')
-    parser.add_argument('--train_folder_3', type=str, 
-                        default=None,
+    parser.add_argument('--train_folder_3', type=str, default=None,
                         help='Third optional training data folder')
-    parser.add_argument('--train_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_3_aperio.csv",
+    parser.add_argument('--train_labels', type=str, required=True,
                         help='Path to training label CSV')
-    parser.add_argument('--val_folder', type=str, 
-                        default="/media/digitalpathology/b_chai/trident_outputs/cohort_3/20x_224px_0px_overlap/features_uni_v2",
+    parser.add_argument('--val_folder', type=str, required=True,
                         help='Path to validation data folder')
-    parser.add_argument('--val_labels', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/labels_14classes/cohort_3_aperio.csv", 
+    parser.add_argument('--val_labels', type=str, required=True,
                         help='Path to validation label CSV')
-    parser.add_argument('--model_folder', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/models/uni_v2/trained_on_14slides_aperio", 
+    parser.add_argument('--model_folder', type=str, required=True,
                         help='Path to saved model folder')
     parser.add_argument('--k_instances', type=int, default=500, help='Number of instances per bag')
     parser.add_argument('--epochs', type=int, default=200, help='Number of training epochs')
@@ -254,14 +247,7 @@ if __name__ == '__main__':
     # make sure output folder exists
     os.makedirs(f"{args.model_folder}", exist_ok=True)
     
-    # # training and validation data preparation
-    # if args.emb_type == 'csv':
-    #     train_patch_features, train_labels, _ = load_data(args.train_folder, args.train_labels)
-    #     val_patch_features, val_labels, _ = load_data(args.val_folder, args.val_labels)
-    # elif args.emb_type == 'h5':
-    #     train_patch_features, train_labels, _ = load_data_h5(args.train_folder, args.train_labels)
-    #     val_patch_features, val_labels, _ = load_data_h5(args.val_folder, args.val_labels)
-        
+    # # training and validation data preparation        
     if args.emb_type == 'csv':
         train_patch_features, train_labels, train_slide_ids = [], [], []
     

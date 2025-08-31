@@ -26,7 +26,6 @@ model_path: str
     
 output_dir: str
     Output directory to save heatmap files.
-                        )
 
 device: str, 
     Device to use (default: cuda).
@@ -93,24 +92,16 @@ def generate_heatmap(coords, scores, slide_id, output_dir, tile_size=10):
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='Generate heatmap from tile embeddings and MLP model')
-    parser.add_argument('--embedding_path', 
-                        type=str, 
-                        default='/media/digitalpathology/b_chai/trident_outputs/cohort_4/20x_224px_0px_overlap/features_uni_v2/RNOH_4_21_S00128702_171212.h5', 
+    parser.add_argument('--embedding_path', type=str, required=True,
                         help='Path to .h5 file with embeddings and coords'
                         )
-    parser.add_argument('--model_path', 
-                        type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/models/uni_v2/trained_on_cohort_1_train/mil_best_model_state_dict_epoch_8.pth', 
+    parser.add_argument('--model_path', type=str, required=True,
                         help='Path to trained MLP model'
                         )
-    parser.add_argument('--output_dir', 
-                        type=str, 
-                        default='/home/digitalpathology/temp', 
+    parser.add_argument('--output_dir', type=str, required=True,
                         help='Output directory to save heatmap files'
                         )
-    parser.add_argument('--device', 
-                        type=str, 
-                        default='cuda', 
+    parser.add_argument('--device', type=str, default='cuda', 
                         help='Device to use (default: cuda)'
                         )
     

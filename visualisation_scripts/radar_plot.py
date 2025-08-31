@@ -47,9 +47,9 @@ def hex_to_rgba(hex_color, alpha):
 if __name__ == '__main__':
     # define argument parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input', type=str, 
+    parser.add_argument('--input', type=str, required=True,
                         help='Path to input csv file')
-    parser.add_argument('--output', type=str, 
+    parser.add_argument('--output', type=str, required=True,
                         help='Path to output folder')
     
     args = parser.parse_args()

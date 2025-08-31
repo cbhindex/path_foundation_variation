@@ -68,37 +68,6 @@ DIAGNOSIS_MAPPING = {
     14: "Low grade fibromyxoid sarcoma"
 }
 
-# def generate_color_palette(unique_values):
-#     """Generate a distinct color palette for unique values, optimized for visual clarity."""
-#     num_colors = len(unique_values)
-    
-#     # Prioritize strong contrast and visually distinct colors first
-#     all_colors = (
-#         px.colors.qualitative.Bold +          # High contrast, good for few categories
-#         px.colors.qualitative.Dark2 +         # Still strong and good for up to ~12
-#         px.colors.qualitative.Set3 +          # More colorful, medium contrast
-#         px.colors.qualitative.Safe +          # Designed for accessibility
-#         px.colors.qualitative.Pastel +        # Soft backup colors
-#         px.colors.qualitative.Light24         # Large pool, lower contrast
-#     )
-
-#     # Deduplicate while preserving order
-#     seen = set()
-#     deduped_colors = []
-#     for color in all_colors:
-#         if color not in seen:
-#             deduped_colors.append(color)
-#             seen.add(color)
-
-#     # Repeat colors only if necessary, but warn if uniqueness can't be preserved
-#     if num_colors > len(deduped_colors):
-#         print(f"Warning: Not enough unique colors for {num_colors} values, some colors will repeat.")
-
-#     colors = deduped_colors * ((num_colors // len(deduped_colors)) + 1)
-#     color_map = {str(val): colors[i] for i, val in enumerate(unique_values)}
-    
-#     return color_map
-
 def generate_color_palette(unique_values):
     """Generate a perceptually distinct, print-safe palette with good early contrast."""
     num_colors = len(unique_values)
@@ -149,102 +118,6 @@ def generate_color_palette(unique_values):
 
     color_map = {str(val): colors[i] for i, val in enumerate(unique_values)}
     return color_map
-
-# def plot_tsne(embeddings, slide_ids, labels, predictions, confidences, staining_institutes, scan_devices, color_by, output_path):
-#     tsne = TSNE(n_components=2, perplexity=30, random_state=42)
-#     embeddings_2D = tsne.fit_transform(embeddings)
-
-#     df_tsne = pd.DataFrame({
-#         'tSNE1': embeddings_2D[:, 0],
-#         'tSNE2': embeddings_2D[:, 1],
-#         'slide_id': slide_ids,
-#         # 'Diagnosis': [str(label) for label in labels],
-#         'Diagnosis': [
-#             DIAGNOSIS_MAPPING[int(label)] if color_by == 'subtype' else str(label) 
-#             for label in labels
-#             ],
-#         'Prediction': predictions,
-#         'Score': [f"{conf:.6f}" for conf in confidences],
-#         'Staining Institute': staining_institutes,
-#         'Scan Device': scan_devices
-#     })
-
-#     if color_by == 'staining_institute':
-#         color_column = 'Staining Institute'
-#     elif color_by == 'scan_device':
-#         color_column = 'Scan Device'
-#     else:
-#         color_column = 'Diagnosis'  # Default to subtype classification
-
-#     if color_by == 'staining_institute':
-#         unique_values = sorted(df_tsne[color_column].unique(), key=lambda x: int(x[1:]))
-#     elif color_by == 'subtype':
-#         inverse_mapping = {v: k for k, v in DIAGNOSIS_MAPPING.items()}
-#         unique_values = sorted(df_tsne[color_column].unique(), key=lambda x: inverse_mapping[x])
-#     else:
-#         unique_values = sorted(df_tsne[color_column].unique())
-
-#     color_map = generate_color_palette(unique_values)
-
-#     fig = px.scatter(
-#         df_tsne,
-#         x='tSNE1',
-#         y='tSNE2',
-#         color=df_tsne[color_column],
-#         hover_data=['slide_id', 'Prediction', 'Score'],
-#         # title=f"Interactive t-SNE Visualization (Color by {color_column})",
-#         labels={'color': color_column},
-#         width=1200, height=800,
-#         category_orders={color_column: unique_values},  # Maintain consistent legend order
-#         color_discrete_map=color_map
-#     )
-    
-#     # Generate div with CDN JS, not full HTML
-#     plot_div = pio.to_html(fig, include_plotlyjs='cdn', full_html=False)
-
-#     # Add the custom JavaScript for click-to-copy
-#     js_code = """
-#     <script>
-#     document.addEventListener('DOMContentLoaded', function() {
-#         var plot = document.getElementsByClassName('plotly-graph-div')[0];
-
-#         plot.on('plotly_click', function(data) {
-#             if (data.points.length > 0) {
-#                 var filename = data.points[0].customdata[0]; 
-#                 navigator.clipboard.writeText(filename).then(function() {
-#                     alert("Copied to clipboard: " + filename);
-#                 }).catch(function(err) {
-#                     console.error("Failed to copy: ", err);
-#                 });
-#             }
-#         });
-#     });
-#     </script>
-#     """
-#     # Wrap everything into a complete HTML page
-#     full_html = f"""
-#     <!DOCTYPE html>
-#     <html>
-#     <head>
-#         <meta charset="utf-8">
-#         <title>t-SNE Visualization</title>
-#     </head>
-#     <body>
-#         {plot_div}
-#         {js_code}
-#     </body>
-#     </html>
-#     """
-#     output_html = os.path.join(output_path, f"tsne_visualisation_interactive_{color_by}.html")
-#     with open(output_html, "w", encoding="utf-8") as f:
-#         f.write(full_html)
-
-#     print(f"Interactive t-SNE visualization saved at: {output_html}")
-    
-#     # Save static PDF version
-#     pdf_output = os.path.join(output_path, f"tsne_visualisation_static_{color_by}.pdf")
-#     fig.write_image(pdf_output, format="pdf", width=1200, height=800)
-#     print(f"Static t-SNE PDF saved at: {pdf_output}")
 
 def plot_tsne(embeddings, slide_ids, labels, staining_institutes, scan_devices, color_by, output_path):
     tsne = TSNE(n_components=2, perplexity=30, random_state=42)
@@ -342,11 +215,9 @@ def plot_tsne(embeddings, slide_ids, labels, staining_institutes, scan_devices, 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_csv', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation_scripts/tsne_source/titan/cohort_2_titan.csv",
+    parser.add_argument('--input_csv', type=str, required=True,
                         help='Path to input CSV file with embeddings and labels')
-    parser.add_argument('--output', type=str, 
-                        default="/home/digitalpathology/workspace/path_foundation_stain_variation/visualisation/tsne_plots/cohort_2_titan",
+    parser.add_argument('--output', type=str, required=True,
                         help='Path to output folder')
 
     args = parser.parse_args()

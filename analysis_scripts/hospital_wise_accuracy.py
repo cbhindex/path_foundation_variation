@@ -74,14 +74,11 @@ def calculate_hospital_accuracy(csv_file_path, excel_file_path, output_dir):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Calculate hospital-wise accuracy from prediction results and metadata.")
-    parser.add_argument('--csv_file', type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/cohort_4/cohort_4_individual_results.csv', 
+    parser.add_argument('--csv_file', type=str, required=True,
                         help='Path to the prediction results CSV file.')
-    parser.add_argument('--excel_file', type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/metadata/cohort_4/external_staining_variation data_refined_BC_23JAN2025.xlsx', 
+    parser.add_argument('--excel_file', type=str, required=True,
                         help='Path to the metadata Excel file.')
-    parser.add_argument('--output_dir', type=str, 
-                        default='/home/digitalpathology/workspace/path_foundation_stain_variation/output/cohort_4/hospital_accuracy', 
+    parser.add_argument('--output_dir', type=str, required=True,
                         help='Directory to save the output CSV files.')
 
     args = parser.parse_args()
