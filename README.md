@@ -21,7 +21,6 @@ extract_embedding.py      # Embedding extraction (Google Path Foundation only)
 train.py                  # Train an attention-based MIL model
 test.py                   # Test a trained MIL model
 trident_with_normalisation.py  # Optional setting: apply colour normalisation before embedding extraction using **Trident**
-
 ```
 
 ---
