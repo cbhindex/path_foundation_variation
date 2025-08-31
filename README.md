@@ -5,6 +5,7 @@ Microscopic analysis of histopathology is considered the gold standard for cance
 
 In this study, we use soft tissue tumours, a rare and morphologically diverse tumour type, as a challenging test case to systematically investigate the colour-related robustness and generalisability of seven AI models. Controlled staining and scanning experiments are designed to assess model performances across diverse real-world data sources. Foundation models, particularly **UNI-v2**, **Virchow**, and **TITAN**, demonstrated encouraging robustness to staining and scanning variation, particularly when a small number of stain-varied slides were included in the training loop, highlighting their potential as adaptable and data-efficient tools for real-world digital pathology workflows.
 
+A project website can be found <a href="https://cbhindex.github.io/visualise_scan_stain_efffects" target="_blank">here</a> (under construction).
 ---
 
 ## Repository Structure
@@ -159,5 +160,14 @@ python test.py --test_folder /path/to/test_data --test_labels /path/to/test_labe
 ---
 
 ## Citation
-If you use this repository or code in your research, please cite (TBC, under preparation)
-
+If you use this repository or code in your research, please cite
+```
+@article{chai2025impact,
+  title={Impact of variation in tissue staining and scanning devices on performance of pan-cancer AI models: a study of sarcoma and their mimics},
+  author={Chai, Binghao and Chen, Jianan and Cool, Paul and Oumlil, Fatine and Tollitt, Anna and Steiner, David F and Chakraborti, Tapabrata and Flanagan, Adrienne M},
+  journal={bioRxiv},
+  pages={2025--08},
+  year={2025},
+  publisher={Cold Spring Harbor Laboratory}
+}
+```
