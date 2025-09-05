@@ -1,5 +1,4 @@
 .DS_Store
-embeddings/
 metadata/
 output/
 output_721/
@@ -15,7 +14,7 @@ train_log/
 visualisation/
 archive/
 *.csv
-bach/
+bash/
 titan/
 prism/
 cohort2_ss_tiles_3000/
