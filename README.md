@@ -5,7 +5,7 @@ Microscopic analysis of histopathology is considered the gold standard for cance
 
 In this study, we use soft tissue tumours, a rare and morphologically diverse tumour type, as a challenging test case to systematically investigate the colour-related robustness and generalisability of seven AI models. Controlled staining and scanning experiments are designed to assess model performances across diverse real-world data sources. Foundation models, particularly **UNI-v2**, **Virchow**, and **TITAN**, demonstrated encouraging robustness to staining and scanning variation, particularly when a small number of stain-varied slides were included in the training loop, highlighting their potential as adaptable and data-efficient tools for real-world digital pathology workflows.
 
-A unique multi-institutional dataset comprising 1,243 whole slide images covering 14 tumour types, stained in 30 external institutions in addition to Royal National Orthopaedic Hospital, where the project was carried out, and scanned with three scanners, is shared with the research community at: LINK (COMING SOON)
+**A unique multi-institutional dataset** comprising 1,243 whole slide images covering 14 tumour types, stained in 30 external institutions in addition to Royal National Orthopaedic Hospital, where the project was carried out, and scanned with three scanners, is shared with the research community at: **LINK** (COMING SOON)
 
 A project website can be found [here](https://cbhindex.github.io/visualise_scan_stain_efffects) 
 
