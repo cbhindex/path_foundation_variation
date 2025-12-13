@@ -1,11 +1,13 @@
-# Impact of variation in tissue staining and scanning devices on performance of pan-cancer AI models: a study of sarcoma and their mimics
+# Impact of tissue staining and scanner variation on the performance of pathology foundation models: a study of sarcomas and their mimics
 
 ## Introduction
 Microscopic analysis of histopathology is considered the gold standard for cancer diagnosis and prognosis. Recent advances in AI, driven by large-scale digitisation and pan-cancer foundation models, are opening new opportunities for clinical integration. However, it remains unclear how robust these foundation models are to real-world sources of variability, particularly in staining and scanning protocols.
 
 In this study, we use soft tissue tumours, a rare and morphologically diverse tumour type, as a challenging test case to systematically investigate the colour-related robustness and generalisability of seven AI models. Controlled staining and scanning experiments are designed to assess model performances across diverse real-world data sources. Foundation models, particularly **UNI-v2**, **Virchow**, and **TITAN**, demonstrated encouraging robustness to staining and scanning variation, particularly when a small number of stain-varied slides were included in the training loop, highlighting their potential as adaptable and data-efficient tools for real-world digital pathology workflows.
 
-A project website can be found [here](https://cbhindex.github.io/visualise_scan_stain_efffects) (under construction).
+A unique multi-institutional dataset comprising 1,243 whole slide images covering 14 tumour types, stained in 30 external institutions in addition to Royal National Orthopaedic Hospital, where the project was carried out, and scanned with three scanners, is shared with the research community at: LINK (COMING SOON)
+
+A project website can be found [here](https://cbhindex.github.io/visualise_scan_stain_efffects) 
 
 ---
 
