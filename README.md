@@ -263,7 +263,7 @@ python run_logistic_regression.py \
 ## Licence and Data Usage
 
 ### Code licence
-At present, this repository does not include a root `LICENSE`/`LICENCE` file. If you intend others to reuse the code, add an explicit licence file.
+This repository is licensed under the **Apache License 2.0**. See `LICENSE`.
 
 ### Dataset licence (checked from linked pages)
 - The dataset portal page (`bhchai.com/visualise_scan_stain_efffects/dataset.html`) lists Kaggle dataset links with licence of **Attribution 4.0 International (CC BY 4.0)**.
