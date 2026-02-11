@@ -87,7 +87,7 @@ from utils.helper_functions_pytorch import collate_fn_random_sampling, load_data
 # Train function
 def train_model(
         train_loader, val_loader, model, criterion, optimizer, device, 
-        model_folder, num_class=14, epochs=50, patience=10
+        model_folder, scheduler=None, num_class=14, epochs=50, patience=10
         ):
     
     # Ensure the output folder (the folder to save model) exists
@@ -107,13 +107,14 @@ def train_model(
         correct, total = 0, 0
         
         for batch_patches, batch_labels in train_loader:
-            optimizer.zero_grad()  # Zero the gradients
-            
             # As the labels in the dataset is ranged from 1 to N, but CrossEntropyLoss 
             # expects the labels to be in the range 0 to num_classes - 1, so we need to 
             # adjust the labels to be in the range [0, 14] instead of [1, N]
             batch_labels = batch_labels - 1  # Adjust label range from [1, N] to [0, N-1] for CrossEntropyLoss
             batch_labels = batch_labels.to(device)
+
+            optimizer.zero_grad()  # Zero gradients for the current batch update
+            batch_loss = 0.0
 
             # Process each slide (bag) separately since each has variable patches
             for i, patches in enumerate(batch_patches):
@@ -124,12 +125,13 @@ def train_model(
                 
                 # Compute the loss
                 loss = criterion(output.unsqueeze(0), batch_labels[i].unsqueeze(0))  # Ensure dimensions match
-                
-                # Backward pass and update the model parameters
-                loss.backward()  # Backpropagation
-                optimizer.step()  # Gradient descent step
-                
-                running_loss += loss.item()
+                batch_loss += loss
+
+            # Single optimizer update per batch
+            batch_loss = batch_loss / len(batch_patches)
+            batch_loss.backward()
+            optimizer.step()
+            running_loss += batch_loss.item()
         
         # Store the average training loss for this epoch
         train_loss = running_loss / len(train_loader)
@@ -176,7 +178,8 @@ def train_model(
         print(f"Epoch {epoch+1}, Val Loss: {val_loss:.4f}, Overall Val Acc: {val_accuracy:.2f}%")
         
         # Reduce learning rate if validation loss stops improving
-        scheduler.step(val_loss) 
+        if scheduler is not None:
+            scheduler.step(val_loss) 
         
         # Print per-class accuracy
         for i in range(num_class):
@@ -305,6 +308,7 @@ if __name__ == '__main__':
     train_model(
         train_loader, val_loader, model, criterion, optimizer, device, 
         model_folder=args.model_folder,
+        scheduler=scheduler,
         num_class=args.num_class, epochs=args.epochs, patience=args.patience
         )
 

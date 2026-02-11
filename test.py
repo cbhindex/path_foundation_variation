@@ -232,6 +232,8 @@ if __name__ == '__main__':
                         help='the embedding type, select from h5 or csv')
     parser.add_argument('--cohort', type=str, required=True,
                         help='text input for output folder')
+    parser.add_argument('--num_class', type=int, default=14,
+                        help='Number of classes')
 
     args = parser.parse_args()
     
@@ -262,12 +264,12 @@ if __name__ == '__main__':
 
     # Load the trained model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = AttentionMIL(input_dim=emb_dim, attention_dim=128, num_classes=14).to(device)
-    model.load_state_dict(torch.load(args.model))
+    model = AttentionMIL(input_dim=emb_dim, attention_dim=128, num_classes=args.num_class).to(device)
+    model.load_state_dict(torch.load(args.model, map_location=device))
     
     # Run model evaluation
     top1_results, top3_results, individual_results = evaluate_model(
-        model, test_loader, test_slide_filenames, device, num_class=14)
+        model, test_loader, test_slide_filenames, device, num_class=args.num_class)
     
     df_top1_results = pd.DataFrame(list(top1_results.items()))
     df_top1_results.to_csv(
