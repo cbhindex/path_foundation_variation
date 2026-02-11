@@ -322,6 +322,7 @@ Please always verify the latest licence terms on the source hosting platform bef
 - **Trident**: https://github.com/mahmoodlab/TRIDENT/
 - **cuCIM**: https://github.com/rapidsai/cucim
 - **torch-staintools**: https://github.com/CielAl/torch-staintools
+- **Dr Binghao Chai (the author)**: https://bhchai.com/
 
 ---
 
