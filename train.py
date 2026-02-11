@@ -6,66 +6,46 @@ Created on Mon Feb  3 16:42:45 2025
 @author: Dr Binghao Chai
 @institute: University College London (UCL)
 
-This script trains an attention-based multi-instance learning (MIL) model for 
-digital pathology classification. It processes whole slide images (WSIs) that 
-have been converted into patch-level 384-dimensional (for the Google Path 
-Foundation model) feature embeddings (other model will have other embedding dimensions).
- 
-The script loads training and validation data from CSV files, where each slide (bag) 
-contains a variable number of patches (instances). The model uses an attention 
-mechanism to aggregate patch features into a slide-level representation for 
-classification.
+Train an attention-based MIL classifier on slide-level bags of patch embeddings.
 
-The training process includes data loading, model training, validation, and 
-early stopping. The train_model() function iterates through multiple epochs, 
-adjusting labels, computing loss, updating model parameters, and tracking accuracy 
-per class. Validation is performed after each epoch, and the best model is saved 
-based on validation accuracy. If the validation loss does not improve for a specified 
-number of epochs (patience), early stopping is triggered to prevent overfitting. 
-This ensures efficient and optimal training while maintaining generalisation 
-performance.
+Each slide is represented as a variable-length bag of patch embeddings loaded from
+``.csv`` or ``.h5`` files. Labels in metadata are expected to start from 1 and
+are shifted to 0-based indices internally for ``CrossEntropyLoss``.
 
-Parameters
-----------
-train_folder: str
-    Path to training data folder.
-    
-train_folder_2: str
-    Path to second optional training data folder.
+Training includes:
+1. Random patch sampling per bag (``k_instances``).
+2. Validation at each epoch.
+3. Learning-rate scheduling on validation loss.
+4. Early stopping and checkpointing of the best model.
 
-train_folder_3: str
-    Path to third optional training data folder.    
-
-train_labels: str
-    Path to training label CSV.
-
-val_folder: str
-    Path to validation data folder.
-
-val_labels: str
-    Path to validation label CSV.
-    
-model_folder: str
-    Path to saved model folder, this is also the output folder.
-
-k_instances: int
-    Number of instances per bag.
-    
-epochs: int
-    Number of training epochs.
-    
-lr: float
-    Learning rate.
-
-patience: int
-    Number of patient epochs for early stop
-    
-num_class: int
-    Number of class
-    
-emb_type: str, 
-    The embedding type, select from 'h5' or 'csv'
-
+CLI Arguments
+-------------
+--train_folder : str
+    Primary training embedding directory.
+--train_folder_2 : str, optional
+    Optional second training embedding directory.
+--train_folder_3 : str, optional
+    Optional third training embedding directory.
+--train_labels : str
+    Training label CSV with columns ``case_id`` and ``ground_truth``.
+--val_folder : str
+    Validation embedding directory.
+--val_labels : str
+    Validation label CSV with columns ``case_id`` and ``ground_truth``.
+--model_folder : str
+    Output directory for checkpoints and logs.
+--k_instances : int
+    Number of patch instances randomly sampled per slide.
+--epochs : int
+    Maximum number of training epochs.
+--lr : float
+    Initial learning rate.
+--patience : int
+    Early-stopping patience (epochs).
+--num_class : int
+    Number of target classes.
+--emb_type : {"h5", "csv"}
+    Embedding file format.
 """
 
 import os
@@ -82,13 +62,43 @@ from torch.utils.data import DataLoader
 from utils.helper_class_pytorch import SlideBagDataset, AttentionMIL
 from utils.helper_functions_pytorch import collate_fn_random_sampling, load_data, load_data_h5
 
-#################### define the training loop ####################
+# -----------------------------------------------------------------------------
+# Training Loop
+# -----------------------------------------------------------------------------
 
 # Train function
 def train_model(
         train_loader, val_loader, model, criterion, optimizer, device, 
         model_folder, scheduler=None, num_class=14, epochs=50, patience=10
         ):
+    """
+    Train and validate an MIL model with checkpointing and early stopping.
+
+    Parameters
+    ----------
+    train_loader : torch.utils.data.DataLoader
+        Training dataloader yielding ``(batch_patches, batch_labels)``.
+    val_loader : torch.utils.data.DataLoader
+        Validation dataloader yielding ``(batch_patches, batch_labels)``.
+    model : torch.nn.Module
+        MIL model that returns ``(logits, attention_weights)`` for one slide bag.
+    criterion : torch.nn.Module
+        Loss function (typically ``CrossEntropyLoss``).
+    optimizer : torch.optim.Optimizer
+        Optimizer used to update model parameters.
+    device : torch.device
+        Device for training/inference (CPU or CUDA).
+    model_folder : str
+        Output directory for model checkpoints.
+    scheduler : torch.optim.lr_scheduler._LRScheduler or ReduceLROnPlateau, optional
+        Learning-rate scheduler stepped by validation loss when provided.
+    num_class : int, default=14
+        Number of target classes.
+    epochs : int, default=50
+        Maximum number of training epochs.
+    patience : int, default=10
+        Early-stopping patience measured in epochs without validation improvement.
+    """
     
     # Ensure the output folder (the folder to save model) exists
     os.makedirs(model_folder, exist_ok=True)
@@ -220,28 +230,35 @@ def train_model(
 # Main function
 if __name__ == '__main__':
     # define argument parser
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Train an attention-based MIL classifier from patch embeddings."
+    )
     parser.add_argument('--train_folder', type=str, required=True,
-                        help='Path to training data folder')
+                        help='Primary training embedding directory.')
     parser.add_argument('--train_folder_2', type=str, default=None,
-                        help='Second optional training data folder')
+                        help='Optional second training embedding directory.')
     parser.add_argument('--train_folder_3', type=str, default=None,
-                        help='Third optional training data folder')
+                        help='Optional third training embedding directory.')
     parser.add_argument('--train_labels', type=str, required=True,
-                        help='Path to training label CSV')
+                        help='Training label CSV with columns case_id, ground_truth.')
     parser.add_argument('--val_folder', type=str, required=True,
-                        help='Path to validation data folder')
+                        help='Validation embedding directory.')
     parser.add_argument('--val_labels', type=str, required=True,
-                        help='Path to validation label CSV')
+                        help='Validation label CSV with columns case_id, ground_truth.')
     parser.add_argument('--model_folder', type=str, required=True,
-                        help='Path to saved model folder')
-    parser.add_argument('--k_instances', type=int, default=500, help='Number of instances per bag')
-    parser.add_argument('--epochs', type=int, default=200, help='Number of training epochs')
-    parser.add_argument('--lr', type=float, default=0.0005, help='Learning rate')
-    parser.add_argument('--patience', type=int, default=10, help='Number of patient epochs for early stop')
-    parser.add_argument('--num_class', type=int, default=14, help='Number of class')
+                        help='Output directory for checkpoints and logs.')
+    parser.add_argument('--k_instances', type=int, default=500,
+                        help='Number of patch instances randomly sampled per slide.')
+    parser.add_argument('--epochs', type=int, default=200,
+                        help='Maximum number of training epochs.')
+    parser.add_argument('--lr', type=float, default=0.0005,
+                        help='Initial learning rate.')
+    parser.add_argument('--patience', type=int, default=10,
+                        help='Early-stopping patience (epochs).')
+    parser.add_argument('--num_class', type=int, default=14,
+                        help='Number of target classes.')
     parser.add_argument('--emb_type', type=str, default='h5', choices=['h5', 'csv'],
-                        help='the embedding type, select from h5 or csv')
+                        help='Embedding file format: h5 or csv.')
     
     args = parser.parse_args()
     

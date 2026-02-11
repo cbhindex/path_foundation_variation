@@ -6,8 +6,24 @@ Created on Wed Dec  3 00:45:20 2025
 @author: Dr Binghao Chai
 @institute: University College London (UCL)
 
-This script is for the slide-level inference using logistic regression on the
-slide-level embeddings (for TITAN and PRISM only)
+Run slide-level classification with Logistic Regression on precomputed embeddings.
+
+This script expects one embedding file (``.h5``) per case ID and a metadata CSV
+containing:
+1. ``case_id``
+2. ``ground_truth`` (1-based class index)
+3. ``split`` (train/val/test)
+
+The script trains a Logistic Regression model on the train split, evaluates on
+the test split, and writes summary CSV outputs for overall metrics, class-wise
+accuracy, and per-case top-3 predictions.
+
+CLI Arguments
+-------------
+--metadata_file : str
+    Metadata CSV with columns ``case_id``, ``ground_truth``, and ``split``.
+--embedding_dir : str
+    Directory containing slide-level embedding files (``<case_id>.h5``).
 """
 
 # Import packages
@@ -60,6 +76,21 @@ def train_and_evaluate(train_data, train_labels, test_data, test_labels):
     return model
 
 def load_embedding(slide_id, embedding_dir):
+    """
+    Load a slide-level embedding array from ``{embedding_dir}/{slide_id}.h5``.
+
+    Parameters
+    ----------
+    slide_id : str
+        Case identifier used as file stem.
+    embedding_dir : str
+        Directory containing slide-level embedding H5 files.
+
+    Returns
+    -------
+    np.ndarray | None
+        Embedding array if present, otherwise ``None``.
+    """
     feats_path = os.path.join(embedding_dir, f"{slide_id}.h5")
     if os.path.exists(feats_path):
         with h5py.File(feats_path, 'r') as h5_file:
@@ -69,6 +100,21 @@ def load_embedding(slide_id, embedding_dir):
         return None
 
 def construct_datasets(metadata_file, embedding_dir):
+    """
+    Build split-wise feature/label arrays and case ID lists from metadata.
+
+    Parameters
+    ----------
+    metadata_file : str
+        CSV path with ``case_id``, ``ground_truth``, and ``split`` columns.
+    embedding_dir : str
+        Directory containing ``<case_id>.h5`` embedding files.
+
+    Returns
+    -------
+    tuple[dict, dict, dict]
+        ``(datasets, labels, case_ids)`` keyed by ``train``, ``val``, ``test``.
+    """
     df = pd.read_csv(metadata_file)
     datasets = {"train": [], "val": [], "test": []}
     labels = {"train": [], "val": [], "test": []}
@@ -92,6 +138,27 @@ def construct_datasets(metadata_file, embedding_dir):
     return datasets, labels, case_ids
 
 def train_and_evaluate(train_data, train_labels, test_data, test_labels, test_case_ids):
+    """
+    Train Logistic Regression and export evaluation reports.
+
+    Parameters
+    ----------
+    train_data : np.ndarray
+        Training feature matrix.
+    train_labels : np.ndarray
+        Training labels (0-based).
+    test_data : np.ndarray
+        Test feature matrix.
+    test_labels : np.ndarray
+        Test labels (0-based).
+    test_case_ids : list[str]
+        Case IDs aligned with ``test_data``.
+
+    Returns
+    -------
+    sklearn.linear_model.LogisticRegression
+        Trained classifier.
+    """
     model = LogisticRegression(max_iter=1000, random_state=42)
     model.fit(train_data, train_labels)
 
@@ -148,12 +215,18 @@ def train_and_evaluate(train_data, train_labels, test_data, test_labels, test_ca
     return model
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run inference")
+    parser = argparse.ArgumentParser(
+        description="Train/evaluate Logistic Regression on slide-level embeddings."
+    )
     
     parser.add_argument(
-        "--metadata_file", type=str, required=True, help="a CSV file containing metadata.")
+        "--metadata_file", type=str, required=True,
+        help="Metadata CSV with columns: case_id, ground_truth, split."
+    )
     parser.add_argument(
-        "--embedding_dir", type=str, required=True, help="Directory with slide-level embeddings files.")
+        "--embedding_dir", type=str, required=True,
+        help="Directory containing slide-level embedding files (<case_id>.h5)."
+    )
                             
     args = parser.parse_args()
 

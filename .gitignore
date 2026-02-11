@@ -1,23 +1,82 @@
+# ----------------------------
+# OS / editor metadata
+# ----------------------------
 .DS_Store
+Thumbs.db
+
+.vscode/
+.idea/
+.spyproject/
+
+# ----------------------------
+# Python caches / virtual envs
+# ----------------------------
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+.venv/
+venv/
+env/
+
+# ----------------------------
+# Build / packaging artifacts
+# ----------------------------
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+# ----------------------------
+# Logs / coverage
+# ----------------------------
+.coverage
+.coverage.*
+htmlcov/
+*.log
+*.out
+*.err
+
+# ----------------------------
+# ML artifacts
+# ----------------------------
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.npy
+*.npz
+
+# ----------------------------
+# Project-specific data outputs
+# (keep code folders tracked)
+# ----------------------------
 metadata/
 output/
-output_721/
+output_*/
 tiles/
-utils/__pycache__/
-__pycache__/
-.spyproject/
-*.sh
 labels/
 labels_14classes/
 models/
 train_log/
 visualisation/
 archive/
-*.csv
-bash/
 titan/
 prism/
 cohort2_ss_tiles_3000/
+additional_exp_for_jianan_dec2025/
+
+# Local project utilities / notes (not versioned in this repo)
+bash/
 helper_scripts/
 documentation/
-additional_exp_for_jianan_dec2025/
+
+# Visualisation source datasets (CSV inputs)
+visualisation_scripts/radar_plot_source/
+visualisation_scripts/tsne_source/

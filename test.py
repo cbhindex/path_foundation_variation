@@ -6,29 +6,33 @@ Created on Wed Jan 29 10:47:01 2025
 @author: Dr Binghao Chai
 @institute: University College London (UCL)
 
-This script is to run the MIL classifier on embeddings for testing datasets. It 
-takes WSIs that have been converted into patch-level 384-dimensional feature embeddings 
-as the input (384 is the Google Path Foundation model embedding size, other foundation 
-model will have other size), together with a metadata spreadsheet containin 
-case_id and ground_truth.
+Run inference for a trained attention-based MIL model on a test cohort.
 
-Parameters
-----------
-test_folder: str
-    Path to validation data folder.
-    
-test_labels: str
-    Path to validation label CSV.
+The script loads slide embeddings (``.h5`` or ``.csv``), applies a trained
+checkpoint, and exports:
+1. Overall/per-class top-1 accuracy.
+2. Overall/per-class top-3 accuracy.
+3. Per-slide top-1 to top-5 predictions with probabilities.
 
-model: str
-    Path to saved model.
-    
-output: str
-    Path to output folder.
-    
-emb_type: str, 
-    The embedding type, select from 'h5' or 'csv'
-    
+Input labels are expected to use 1-based class IDs (``1..num_class``). They are
+converted to 0-based internally for model inference and mapped back for outputs.
+
+CLI Arguments
+-------------
+--test_folder : str
+    Test embedding directory.
+--test_labels : str
+    Test label CSV with columns ``case_id`` and ``ground_truth``.
+--model : str
+    Path to model checkpoint (``.pth`` state dict).
+--output : str
+    Output directory for evaluation CSV files.
+--emb_type : {"h5", "csv"}
+    Embedding file format.
+--cohort : str
+    Cohort identifier used as output subfolder name.
+--num_class : int
+    Number of target classes.
 """
 
 # Package Import
@@ -48,39 +52,32 @@ from utils.helper_class_pytorch import SlideBagDataset, AttentionMIL
 from utils.helper_functions_pytorch import load_data, collate_fn_variable_size, load_data_h5
 
 
-#################### define function for model inference ####################
+# -----------------------------------------------------------------------------
+# Inference and Evaluation
+# -----------------------------------------------------------------------------
 
 def evaluate_model(model, test_loader, slide_filenames, device, num_class):
     """
-    Function to evaluate the model on a test dataset.
-    
+    Evaluate a trained MIL model on a test dataloader.
+
     Parameters
     ----------
     model : torch.nn.Module
-        The trained AttentionMIL model.
-        
-    test_loader : DataLoader
-        DataLoader containing the test dataset.
-        
-    slide_filenames : list
-        List of actual case IDs corresponding to the test slides.
-        
+        Trained AttentionMIL model.
+    test_loader : torch.utils.data.DataLoader
+        Dataloader containing test slide bags.
+    slide_filenames : list[str]
+        Case IDs aligned with test dataset order.
     device : torch.device
-        Device to run the evaluation on (CPU or GPU).
-        
-    num_class : int, optional
-        Number of classes.
+        Inference device (CPU or CUDA).
+    num_class : int
+        Number of target classes.
 
     Returns
     -------
-    dict
-        Overall accuracy and per-class accuracy.
-        
-    dict
-        Individual predictions and probabilities for each case.
-        
-    dict
-        Top-3 accuracy overall and per-class.
+    tuple[dict, dict, list[dict]]
+        ``(top1_results, top3_results, individual_results)`` where individual
+        results include per-slide top-1 to top-5 predictions and correctness.
     """
     model.eval()  # Set model to evaluation mode
     
@@ -219,21 +216,23 @@ diagnosis_mapping = {
 # Main function
 if __name__ == '__main__':
     # define argument parser
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Evaluate a trained attention MIL model on a test cohort."
+    )
     parser.add_argument('--test_folder', type=str, required=True,
-                        help='Path to validation data folder')
+                        help='Test embedding directory.')
     parser.add_argument('--test_labels', type=str, required=True,
-                        help='Path to validation label CSV')
+                        help='Test label CSV with columns case_id, ground_truth.')
     parser.add_argument('--model', type=str, required=True,
-                        help='Path to saved model')
+                        help='Path to model checkpoint (.pth state_dict).')
     parser.add_argument('--output', type=str, required=True,
-                        help='Path to output folder')
+                        help='Output directory for evaluation CSV files.')
     parser.add_argument('--emb_type', type=str, default='h5', choices=['h5', 'csv'],
-                        help='the embedding type, select from h5 or csv')
+                        help='Embedding file format: h5 or csv.')
     parser.add_argument('--cohort', type=str, required=True,
-                        help='text input for output folder')
+                        help='Cohort identifier used as output subfolder name.')
     parser.add_argument('--num_class', type=int, default=14,
-                        help='Number of classes')
+                        help='Number of target classes.')
 
     args = parser.parse_args()
     

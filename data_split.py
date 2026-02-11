@@ -6,31 +6,28 @@ Created on Mon Feb  3 15:18:39 2025
 @author: Dr Binghao Chai
 @institute: University College London (UCL)
 
-This script performs a train-validation-test split on a CSV file containing 
-case IDs and ground truth labels. The split is applied to each class individually 
-to maintain balance. The user provides a source CSV file, which contains two 
-columns: 'case_id' and 'ground_truth'. The train, validation, and test sizes 
-are specified as percentages, ensuring they sum to 100. The script processes 
-each class separately, applying the requested split to preserve class distribution. 
-The resulting split datasets are returned as DataFrames.
+Split a case-level label table into train/validation/test CSV files.
 
-Parameters
-----------
-source_csv: str
-    Path to the input CSV file containing case IDs and ground truths.
+Expected input columns are:
+1. ``case_id``
+2. ``ground_truth``
 
-train_size: int
-    Percentage of training size (0-100).
+The split is performed class-by-class to keep class balance approximately
+consistent across train/validation/test subsets. Split ratios are expressed as
+percentages and must sum to 100.
 
-val_size: int
-    Percentage of validation size (0-100).
-
-test_size: int
-    Percentage of testing size (0-100).
-    
-output_folder: str
-    Path to the output folder where split files will be stored.
-
+CLI Arguments
+-------------
+--source_csv : str
+    Input CSV with columns ``case_id`` and ``ground_truth``.
+--train_size : int
+    Training split percentage.
+--val_size : int
+    Validation split percentage.
+--test_size : int
+    Test split percentage.
+--output_folder : str
+    Output directory for generated split CSV files.
 """
 
 import os
@@ -39,9 +36,30 @@ import time
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-#################### define data processing function ####################
+# -----------------------------------------------------------------------------
+# Data Split Function
+# -----------------------------------------------------------------------------
 
 def split_data(source_csv, train_size, val_size, test_size):    
+    """
+    Split a labeled case table into train/validation/test subsets.
+
+    Parameters
+    ----------
+    source_csv : str
+        Input CSV path with columns ``case_id`` and ``ground_truth``.
+    train_size : int
+        Training split percentage.
+    val_size : int
+        Validation split percentage.
+    test_size : int
+        Test split percentage.
+
+    Returns
+    -------
+    tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]
+        Train, validation, and test DataFrames.
+    """
     # Check if split percentages sum to 100
     if train_size + val_size + test_size != 100:
         raise ValueError("Train, validation, and test sizes must sum to 100.")
@@ -74,17 +92,19 @@ def split_data(source_csv, train_size, val_size, test_size):
 
 if __name__ == "__main__":
     # define argument parser
-    parser = argparse.ArgumentParser(description="Train-validation-test split for dataset.")
+    parser = argparse.ArgumentParser(
+        description="Split a labeled case CSV into train/validation/test CSV files."
+    )
     parser.add_argument("--source_csv", type=str, required=True,
-                        help="Path to the input CSV file containing case IDs and ground truths.")
+                        help="Input CSV with columns: case_id, ground_truth.")
     parser.add_argument("--train_size", type=int, default=60,
-                        help="Percentage of training size (0-100).")
+                        help="Training split percentage (0-100).")
     parser.add_argument("--val_size", type=int, default=20,
-                        help="Percentage of validation size (0-100).")
+                        help="Validation split percentage (0-100).")
     parser.add_argument("--test_size", type=int, default=20,
-                        help="Percentage of testing size (0-100).")
+                        help="Test split percentage (0-100).")
     parser.add_argument("--output_folder", type=str, required=True,
-                        help="Path to the output folder where split files will be stored.")
+                        help="Output directory for generated split CSV files.")
     
     args = parser.parse_args()
     
