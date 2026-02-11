@@ -25,6 +25,48 @@ trident_with_normalisation.py    Optional stain normalisation + Trident embeddin
 train.py                         Attention-based MIL model training
 test.py                          Attention-based MIL model evaluation
 run_logistic_regression.py       Slide-level Logistic Regression evaluation (TITAN/PRISM embeddings)
+
+environment.base.yml             Cross-platform base Conda environment definition
+environment.mac.yml              macOS Conda overlay (PyTorch/torchvision)
+environment.linux-cuda.yml       Linux CUDA Conda overlay (PyTorch + CUDA runtime)
+create_env.sh                    One-command environment bootstrap script
+```
+
+---
+
+## Installation
+
+This repository provides a one-command Conda setup for macOS and Linux.
+
+### Prerequisites
+- Anaconda or Miniconda installed.
+- `conda` available in your terminal `PATH`.
+
+### 1) Create the default environment
+```bash
+bash create_env.sh
+```
+
+This creates an environment named `path_foundation` and:
+- applies `environment.base.yml` on all platforms;
+- applies `environment.mac.yml` on macOS;
+- applies `environment.linux-cuda.yml` on Linux when NVIDIA GPU is detected.
+
+### 2) Optional: choose a custom environment name
+```bash
+bash create_env.sh --name my_env_name
+```
+
+### 3) Optional: install Trident/stain-normalisation extras (Linux)
+```bash
+bash create_env.sh --with-trident
+```
+
+This additionally installs `cupy-cuda12x`, `cucim`, `torch-staintools`, and TRIDENT.
+
+### 4) Activate the environment
+```bash
+conda activate path_foundation
 ```
 
 ---

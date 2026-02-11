@@ -1,0 +1,7 @@
+name: path_foundation
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - pytorch
+  - torchvision

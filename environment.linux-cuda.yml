@@ -1,0 +1,9 @@
+name: path_foundation
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - pytorch
+  - torchvision
+  - pytorch-cuda=12.1
