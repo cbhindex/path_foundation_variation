@@ -8,7 +8,7 @@ In this study, we use soft tissue tumours, a rare and morphologically diverse tu
 Project links:
 - Dataset portal: https://bhchai.com/visualise_scan_stain_efffects/dataset.html
 - Project website: https://cbhindex.github.io/visualise_scan_stain_efffects
-- Preprint: https://www.biorxiv.org/content/10.1101/2025.08.18.670932v2
+- Paper: https://pathsocjournals.onlinelibrary.wiley.com/doi/full/10.1002/2056-4538.70080
 
 ---
 
@@ -329,12 +329,14 @@ Please always verify the latest licence terms on the source hosting platform bef
 ## Citation
 If you use this repository, code or the published dataset in your research, please cite:
 ```bibtex
-@article{chai2025impact,
+@article{chai2026impact,
   title={Impact of tissue staining and scanner variation on the performance of pathology foundation models: a study of sarcomas and their mimics},
-  author={Chai, Binghao and Chen, Jianan and Cool, Paul and Oumlil, Fatine and Tollitt, Anna and Steiner, David F and Chakraborti, Tapabrata and Flanagan, Adrienne M},
-  journal={bioRxiv},
-  pages={2025--08},
-  year={2025},
-  publisher={Cold Spring Harbor Laboratory}
+  author={Chai, Binghao and Chen, Jianan and Cool, Paul and Oumlil, Fatine and Tollitt, Anna and Steiner, David F and Chakraborti, Tapabrata and Flanagan, Adrienne M and Flanagan, Adrienne M and Tollit, Anna and others},
+  journal={The Journal of Pathology: Clinical Research},
+  volume={12},
+  number={2},
+  pages={e70080},
+  year={2026},
+  publisher={Wiley Online Library}
 }
 ```
